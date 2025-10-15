@@ -1,0 +1,20 @@
+<div *ngIf="method == 'Metabolitics' && predictions.length !== 0" class="panel panel-default">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>AI-based Disease Prediction</th>
+        <th></th>
+      </tr>
+      <tr>
+	<th>Disease</th>
+	<th>Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of predictions">
+	<td style="text-transform: capitalize;">{{ p['disease'] }}</td>
+  <td>{{ p['pred_score'] }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

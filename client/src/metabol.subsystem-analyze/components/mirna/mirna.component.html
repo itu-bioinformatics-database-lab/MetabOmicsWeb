@@ -1,0 +1,55 @@
+<div class="mirna-container">
+  <div class="header">
+    <h2>Upload miRNA Dataset</h2>
+    <p class="description">Upload and analyze your miRNA data using various file formats.</p>
+  </div>
+
+  <div class="upload-section">
+    <div class="upload-card">
+      <h3>Upload Data</h3>
+      <div class="form-group">
+        <label class="control-label">CSV Format:</label>
+        <div class="input-group">
+          <input type="file" class="form-control" (change)="uploadService.csvChange($event, 'miRNA')" accept=".csv">
+          <span class="file-info">Upload miRNA expression data in CSV format</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label">JSON Format:</label>
+        <div class="input-group">
+          <input type="file" class="form-control" (change)="uploadService.jsonChange($event, 'miRNA')" accept=".json">
+          <span class="file-info">Upload miRNA expression data in JSON format</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label">Excel Format:</label>
+        <div class="input-group">
+          <input type="file" class="form-control" (change)="uploadService.incomingfile($event, { value: loading })" accept=".xlsx">
+          <span class="file-info">Upload miRNA expression data in Excel format</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label">Workbench Format:</label>
+        <div class="input-group">
+          <input type="file" class="form-control" (change)="uploadService.readText($event)" accept=".txt">
+          <span class="file-info">Upload miRNA expression data from miRNA Workbench</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Processing your data...</p>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" (click)="uploadService.proceed('miRNA')" [disabled]="!uploadService.canProceed('miRNA')">
+      {{ uploadService.getContinueButton() }}
+    </button>
+  </div>
+</div>
+

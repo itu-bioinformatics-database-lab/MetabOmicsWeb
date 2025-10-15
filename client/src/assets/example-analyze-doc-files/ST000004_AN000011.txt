@@ -1,0 +1,128 @@
+#METABOLOMICS WORKBENCH STUDY_ID:ST000004 ANALYSIS_ID:AN000011 PROJECT_ID:PR000004
+VERSION             	1
+CREATED_ON          	2016-09-17
+#PROJECT
+PR:PROJECT_TITLE                 	LIPID MAPS Lipidomics studies
+PR:PROJECT_TYPE                  	MS quantitative analysis
+PR:PROJECT_SUMMARY               	Multi-center quantitative lipidomics studies on samples from human and murine
+PR:PROJECT_SUMMARY               	(LIPIDMAPS)
+PR:INSTITUTE                     	LIPID MAPS
+PR:DEPARTMENT                    	Multiple
+PR:LABORATORY                    	Multiple
+PR:LAST_NAME                     	Fahy
+PR:FIRST_NAME                    	Eoin
+PR:ADDRESS                       	UCSD
+PR:EMAIL                         	efahy@ucsd.edu
+PR:PHONE                         	-
+PR:FUNDING_SOURCE                	NIGMS
+#STUDY
+ST:STUDY_TITLE                   	Lipidomics studies on NIDDK / NIST human plasma samples
+ST:STUDY_TYPE                    	MS analysis on human plasma
+ST:STUDY_SUMMARY                 	The National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK) in
+ST:STUDY_SUMMARY                 	with the National Institute of Standards (NIST) recently produced a human
+ST:STUDY_SUMMARY                 	standard reference material (SRM 1950) for metabolite analysis. The SRM was
+ST:STUDY_SUMMARY                 	by obtaining plasma samples from 100 individuals between 40 and 50 years of
+ST:STUDY_SUMMARY                 	whose ethnicity was representative of the US population and that included an
+ST:STUDY_SUMMARY                 	number of men and women. The intent of the NIDDK/NIST project was to provide a
+ST:STUDY_SUMMARY                 	material that would be publically available to researchers and that could be
+ST:STUDY_SUMMARY                 	by the clinical chemistry community to identify plasma metabolites for
+ST:STUDY_SUMMARY                 	purposes. Signature metabolites could then be further probed for their
+ST:STUDY_SUMMARY                 	as disease biomarkers. The LIPID MAPS Consortium has undertaken the task to
+ST:STUDY_SUMMARY                 	this SRM by systematically identifying and quantifying the lipid molecular
+ST:STUDY_SUMMARY                 	in the six main categories of mammalian lipids. The quantitative levels of over
+ST:STUDY_SUMMARY                 	different lipids present in this reference human plasma sample are presented
+ST:INSTITUTE                     	LIPID MAPS
+ST:DEPARTMENT                    	Multiple
+ST:LABORATORY                    	Multiple
+ST:LAST_NAME                     	Fahy
+ST:FIRST_NAME                    	Eoin
+ST:ADDRESS                       	UCSD
+ST:EMAIL                         	efahy@ucsd.edu
+ST:PHONE                         	-
+ST:NUM_GROUPS                    	1
+ST:TOTAL_SUBJECTS                	100
+ST:NUM_MALES                     	100
+#SUBJECT
+SU:SUBJECT_TYPE                  	Human
+SU:SUBJECT_SPECIES               	Homo sapiens
+SU:TAXONOMY_ID                   	9606
+SU:AGE_OR_AGE_RANGE              	40-50
+SU:SPECIES_GROUP                 	Human
+#SUBJECT_SAMPLE_FACTORS:         	SUBJECT(optional)[tab]SAMPLE[tab]FACTORS(NAME:VALUE pairs separated by |)[tab]Additional sample data
+SUBJECT_SAMPLE_FACTORS           	-	NIDDK1	Pooled sample:yes	
+#COLLECTION
+CO:COLLECTION_SUMMARY            	-
+#TREATMENT
+TR:TREATMENT_SUMMARY             	-
+#SAMPLEPREP
+SP:SAMPLEPREP_SUMMARY            	-
+#CHROMATOGRAPHY
+CH:CHROMATOGRAPHY_TYPE           	-
+CH:INSTRUMENT_NAME               	-
+CH:COLUMN_NAME                   	-
+#ANALYSIS
+AN:ANALYSIS_TYPE                 	MS
+#MS
+MS:INSTRUMENT_NAME               	-
+MS:INSTRUMENT_TYPE               	-
+MS:MS_TYPE                       	-
+MS:ION_MODE                      	-
+#MS_METABOLITE_DATA
+MS_METABOLITE_DATA:UNITS         	umol/ml
+MS_METABOLITE_DATA_START
+Samples	NIDDK1
+Factors	Pooled sample:yes
+CE(14:0)	0.0800
+CE(14:1)	0.0303
+CE(15:0)	0.0293
+CE(15:1)	0.0293
+CE(16:0)	0.1907
+CE(16:1)	0.1120
+CE(16:2)	0.0313
+CE(17:0)	0.0337
+CE(17:1)	0.0337
+CE(18:0)	0.0573
+CE(18:1)	0.5320
+CE(18:2)	1.8163
+CE(18:3)	0.1460
+CE(20:0)	0.0320
+CE(20:1)	0.0310
+CE(20:2)	0.0343
+CE(20:3)	0.0330
+CE(20:4)	0.2380
+CE(22:0)	0.0217
+CE(22:1)	0.0073
+CE(22:2)	0.0060
+CE(22:4)	
+CE(22:5)	
+CE(22:6)	0.0313
+MS_METABOLITE_DATA_END
+#METABOLITES
+METABOLITES_START
+metabolite_name	moverz_quant	ri	ri_type	pubchem_id	inchi_key	kegg_id	other_id	other_id_type
+CE(14:0)				99486				
+CE(14:1)				24779601				
+CE(15:0)				24779606				
+CE(15:1)				24779602				
+CE(16:0)				246520		C11251		
+CE(16:1)								
+CE(16:2)				70699299				
+CE(17:0)				24779605				
+CE(17:1)				24779603				
+CE(18:0)				53480457				
+CE(18:1)				5283632		C14641		
+CE(18:2)				5287939		C15441		
+CE(18:3)				6436907				
+CE(20:0)				16061336				
+CE(20:1)				16061337				
+CE(20:2)				16061338				
+CE(20:3)				53480461				
+CE(20:4)				53480459				
+CE(22:0)				53477887				
+CE(22:1)				16219158				
+CE(22:2)				16061340				
+CE(22:4)				16061341				
+CE(22:5)				53480462				
+CE(22:6)								
+METABOLITES_END
+#END

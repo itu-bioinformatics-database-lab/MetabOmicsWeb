@@ -1,0 +1,88 @@
+<div class="form-group input-group make-indentation" style="width: 98% !important">
+  <label>Disease / Physiological Condition</label>
+  <form class="example-form" style="width: 100%;">
+    <mat-form-field class="example-full-width" style="width: 100%;">
+      <input type="text" placeholder="Disease" aria-label="Disease / Physiological Condition" matInput
+        [formControl]="myControl" [matAutocomplete]="auto">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+        <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+          <b>{{option.name}}</b> - {{option.synonym}}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
+</div>
+
+<div class="form-group col-mat-4 make-indentation">
+  <label>Analyze Name</label>
+  <input [formControl]="analyzeName" type="text" class="form-control" placeholder="Analyze Name"
+    style="width: 99% !important;">
+  <span class="text-danger" *ngIf="!analyzeName.valid && analyzeName.dirty">
+    Field Required
+  </span>
+</div>
+<div class="form-group col-mat-4 make-indentation" *ngIf="login.isLoggedIn()">
+  <label>Public or Private</label>
+  <div>
+
+    <mat-slide-toggle [formControl]="isPublic">{{ isPublic.value ? 'Public' : 'Private' }}</mat-slide-toggle>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-1">
+    <h4>Method:</h4>
+  </div>
+  <div class="col-md-3">
+    <select [(ngModel)]="selectedMethod" class="form-control">
+      <option *ngFor="let item of comboboxMethods" [ngValue]="item.id">{{item.name}}</option>
+    </select>
+  </div>
+
+  <ng-container *ngIf="hasTranscriptomicsSelected()">
+    <div class="col-md-1">
+      <h4>Diffusion Model:</h4>
+    </div>
+    <div class="col-md-3">
+      <select [(ngModel)]="selectedModel" class="form-control">
+        <option *ngFor="let item of comboboxDiffusion" [ngValue]="item.id">{{item.name}}</option>
+      </select>
+    </div>
+  </ng-container>
+  <div class="col-md-2">
+    <button (click)="analyze()" class="btn btn-default" [disabled]="!analyzeName.valid">Analyze</button>
+  </div>
+</div>
+
+
+<mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedTabChange)="onTabChange()">
+  <ng-container *ngFor="let omics of omicsArray; let i = index">
+  <mat-tab *ngIf="omics.fileUploaded" [label]="omics.type">
+    <mat-card class="mt-3">
+      <mat-card-header>
+        <mat-card-title>{{omics.type}} Data</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <concentration-table *ngIf="omics.type === 'Metabolomics'"
+          [mConTable]="uploadService.mConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+        </concentration-table>
+        <concentration-table *ngIf="omics.type === 'Transcriptomics'"
+          [tConTable]="uploadService.tConTable" [unmappedTranscriptomics]="unmappedTranscriptomics" [currentOmics]="omics.type">
+        </concentration-table>
+        <concentration-table *ngIf="omics.type === 'Proteomics'"
+          [pConTable]="uploadService.pConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+        </concentration-table>
+        <concentration-table *ngIf="omics.type === 'miRNA'"
+          [mrConTable]="uploadService.mrConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+        </concentration-table>
+        <concentration-table *ngIf="omics.type === 'Genomic Variants'"
+          [gvConTable]="uploadService.gvConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+        </concentration-table>
+        <concentration-table *ngIf="omics.type === 'Epigenomics'"
+          [epConTable]="uploadService.epConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+        </concentration-table>
+      </mat-card-content>
+    </mat-card>
+  </mat-tab>
+  </ng-container>
+</mat-tab-group>

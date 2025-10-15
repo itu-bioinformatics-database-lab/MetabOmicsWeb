@@ -1,0 +1,176 @@
+<div class="row">
+
+
+  <div class="form-group col-mat-4">
+    <label *ngIf="!login.isLoggedIn()">Email</label>
+    <input [formControl]="analyzeEmail" type="text" class="form-control" placeholder="Email"
+      *ngIf="!login.isLoggedIn()">
+
+  </div>
+<!--
+  <div class="form-group input-group make-indentation" style="width: 98% !important;">
+    <label>Disease / Physiological Condition</label>
+    <form class="example-form" style="width: 100%;">
+      <mat-form-field class="example-full-width" style="width: 100%;">
+        <input type="text" placeholder="Disease" aria-label="Disease / Physiological Condition" matInput
+          [formControl]="myControl" [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+          <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+            <b>{{option.name}}</b> - {{option.synonym}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </form>
+  </div>
+
+
+  <div class="form-group col-mat-4 make-indentation">
+    <label>Analyze Name</label>
+    <input [formControl]="analyzeName" type="text" class="form-control" placeholder="Analyze Name"
+      style="width: 99% !important;">
+    <span class="text-danger" *ngIf="!analyzeName.valid && analyzeName.dirty">
+      Field Required
+    </span>
+  </div>
+  <div class="form-group col-mat-4 make-indentation" *ngIf="login.isLoggedIn()">
+    <label>Public or Private</label>
+    <div>
+
+      <mat-slide-toggle [formControl]="isPublic">{{ isPublic.value ? 'Public' : 'Private' }}</mat-slide-toggle>
+    </div>
+  </div>
+-->
+  <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;">
+    <p class="mb-0">Please note that Greek letters are not recognized, and should be replaced by the corresponding
+      English names (i.e., alpha, beta, etc.) for more accurate matching.</p>
+  </blockquote>
+</div>
+
+<div class="row">
+  <div class="row">
+    <div class="col-md-6">
+      <div [id]="chartId"></div>
+    </div>
+    <div class="col-md-6">
+      <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;">
+        <p>{{getMappedLabel()}}: {{getMappedCount()}}</p>
+        <p>Number of Unmapped {{getUnmappedLabel()}}: {{getUnmappedCount()}}</p>
+      </blockquote>
+    </div>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
+    <div *ngIf ="currentOmics != 'Transcriptomics'" class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th colspan="4" style="text-align: center;">{{getListTitle()}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2">
+              <div class="form-group">
+                <input formControlName="name" type="text" class="form-control" placeholder="{{getNamePlaceholder()}}" aria-label="Name input">
+                <span class="text-danger" *ngIf="!form.controls['name'].valid && form.controls['name'].dirty">
+                  Field Required
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="form-group">
+                <input type="text" class="form-control" placeholder="Value" formControlName="value">
+                <span class="text-danger" *ngIf="form.errors?.exactValueEmpty && form.controls['value'].dirty">
+                  Field Required
+                </span>
+              </div>
+            </td>
+            <td>
+              <input [disabled]="!form.valid" type="submit" class="btn btn-default" value="Add">
+            </td>
+          </tr>
+        </tbody>
+        <thead>          
+          <tr>
+            <th>Original Name</th>
+            <th>{{getDatabaseLabel()}}</th>
+            <th>Change Value</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of getActiveTable(); let i=index">
+            <td *ngIf="!r[4]" style="background-color: yellow;">{{ r[0] }}</td>
+            <td *ngIf="r[4]">{{ r[0] }}</td>
+            <td *ngIf="!r[4]" style="background-color: yellow;">{{ r[2] }} ({{r[3]}})</td>
+            <td *ngIf="r[4]">{{ r[2] }} ({{r[3]}})</td>
+            <td *ngIf="!r[4]" style="background-color: yellow;">{{ r[1]}}</td>
+            <td *ngIf="r[4]">{{ r[1]}}</td>
+            <td *ngIf="r[4]">
+              <span class="glyphicon glyphicon-remove" aria-hidden="true" (click)="remove(i)"></span>
+            </td>
+            <td *ngIf="!r[4]" style="background-color: yellow;"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </form>
+</div>
+
+<div class="row" *ngIf="isMapped && previewTable.length">
+  <form [formGroup]="form" (ngSubmit)="onSubmit(form.value)">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th colspan="3" style="text-align: center;">Metabolite List</th>
+          </tr>
+          <tr>
+            <th>Original Name</th>
+            <th>Recon3D</th>
+            <th>Change Value</th>
+          </tr>
+        </thead>
+
+
+        <tbody>
+
+          <tr *ngFor="let r of previewTable;let i=index">
+            <td *ngIf="r[4]" style="background-color: yellow;">{{ r[0] }}</td>
+            <td>{{ r[1] }}</td>
+            <td>{{ r[2] }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </form>
+</div>
+<!--
+<div class="row" *ngIf="!isMapped">
+  <div class="col-md-2">
+    <button (click)="map()" class="btn btn-default" [disabled]="!analyzeName.valid">Continue</button>
+  </div>
+</div>
+
+<div class="row" *ngIf="isMapped && shouldShowOptions()">
+  <div class="col-md-1">
+    <h4>{{getMethodLabel()}}</h4>
+  </div>
+  <div class="col-md-3">
+    <select [(ngModel)]="selectedMethod" class="form-control">
+      <ng-container *ngFor="let item of comboboxMethods">
+        <option *ngIf="isMethodAvailable(item.id)"
+                [ngValue]="item.id">{{item.name}}</option>
+      </ng-container>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button (click)="analyze()" class="btn btn-default" [disabled]="!analyzeName.valid">Analyze</button>
+  </div>
+  -->
+  <div class="row" *ngIf="isMapped && shouldShowOptions()">
+  <div class="col-md-2" *ngIf="currentOmics === 'Transcriptomics'">
+    <button (click)="downloadCSV()" class="btn btn-success">
+      Download CSV file for Matched Genes
+    </button>
+  </div>
+</div>

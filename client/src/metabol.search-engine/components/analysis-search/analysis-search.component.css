@@ -1,0 +1,16 @@
+.mat-form-field, 
+.mat-form-field-wrapper, 
+.mat-form-field-flex, 
+.mat-form-field-infix {
+  width: 100%;
+}
+
+
+.wide-autocomplete-panel {
+  min-width: 500px !important;
+  max-width: 1000px !important; 
+}
+
+.size-of-bar .mat-option {
+  width: 100% !important;
+}

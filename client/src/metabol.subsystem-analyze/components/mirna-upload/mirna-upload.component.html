@@ -1,0 +1,26 @@
+<div class="upload-page">
+  <div class="header">
+    <h2>Data Upload</h2>
+  </div>
+
+  <div *ngIf="mrConTable && mrConTable.length > 0">
+    <concentration-table [mrConTable]="mrConTable" [currentOmics]="'miRNA'"></concentration-table>
+  </div>
+
+  <div *ngIf="loading && (!mrConTable || mrConTable.length === 0)">
+    <mat-spinner diameter="50" style="margin:30px auto 10px auto;"></mat-spinner>
+    <div style="text-align: center;">
+      Mapping miRNA to the standard names. This may take take a while. Please wait to see the list of mapped metabolites. 
+    </div>
+  </div>
+  <div class="actions">
+    <div class="left">
+      <button class="btn btn-default" (click)="backButton()">Back</button>
+    </div>
+    <div class="right" *ngIf="uploadService.shouldShowContinueButton()">
+      <button class="btn btn-primary" (click)="uploadService.proceedToNext()">
+        {{ uploadService.getContinueButton() }}
+      </button>
+    </div>
+  </div>
+</div>

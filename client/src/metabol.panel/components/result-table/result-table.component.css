@@ -1,0 +1,33 @@
+.table-container {
+    position: relative;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .table-header {
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+  }
+  
+  .csv-download-button {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background-color: #007bff; 
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .csv-download-button:hover {
+    background-color: #0056b3; /* Darker shade of the primary color */
+  }
+  
+  .csv-download-button:focus {
+    outline: none;
+  }

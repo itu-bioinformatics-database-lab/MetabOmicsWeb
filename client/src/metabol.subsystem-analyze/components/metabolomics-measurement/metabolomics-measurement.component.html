@@ -1,0 +1,41 @@
+<div class="metabolomics-measurement-container">
+  <div class="header">
+    <h2>Metabolomics Data Entry</h2>
+    <p class="description">Choose how you would like to input your metabolomics data</p>
+  </div>
+
+  <div class="options-section">
+    <div class="option-card">
+      <div class="option-icon">
+        <i class="fas fa-upload"></i>
+      </div>
+      <h3>Upload File</h3>
+      <p>Upload your metabolomics data from a file in various formats</p>
+      <a [routerLink]="['/analyze/metabolomics']" class="btn-primary">
+        Upload File
+      </a>
+    </div>
+
+    <div class="option-card">
+      <div class="option-icon">
+        <i class="fas fa-edit"></i>
+      </div>
+      <h3>Manual Entry</h3>
+      <p>Manually input your metabolite concentration changes</p>
+      <a [routerLink]="['../manual']" class="btn-primary">
+        Manual Entry
+      </a>
+    </div>
+
+    <div class="option-card">
+      <div class="option-icon">
+        <i class="fas fa-flask"></i>
+      </div>
+      <h3>Sample Data</h3>
+      <p>Use our pre-defined sample metabolite change list</p>
+      <a [routerLink]="['../sample']" class="btn-primary">
+        Use Sample Data
+      </a>
+    </div>
+  </div>
+</div> 

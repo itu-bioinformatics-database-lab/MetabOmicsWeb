@@ -1,0 +1,31 @@
+
+
+
+<div class="container">
+<div class="row">
+  <div class="col-md-12">
+<!--    <h1>Metabolite : {{metabol['metabol']}} </h1> <br>-->
+
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Results Found:</h3>
+
+
+<mat-nav-list>
+  <mat-list-item *ngFor="let item of searchResults | keyvalue">
+
+    <a  class="white-icon" [routerLink]="['/panel/past-analysis', item.value['case']]">Study :{{item.value['study']}} --- Method: {{item.value['method']}} --- Case: {{item.value['case']}}</a>
+
+  </mat-list-item>
+</mat-nav-list>
+
+
+
+
+</div>
+  </div>
+
+  </div>
+</div>
+</div>

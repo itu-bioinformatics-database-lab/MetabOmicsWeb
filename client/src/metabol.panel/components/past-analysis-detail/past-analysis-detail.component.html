@@ -1,0 +1,100 @@
+<div class="container">
+  <div *ngIf="!data">
+    <mat-spinner diameter="50" style="margin:30px auto 10px auto;"></mat-spinner>
+    <div style="text-align: center;">Analysis is loading...</div>
+  </div>
+  <div class="row" *ngIf="data">
+    <div class="col-md-6">
+        <mat-form-field style="width: 100%;">
+            <label style="float: left;">Cases of the study</label>
+            <mat-select style="width: 100%;" [(ngModel)]="selectedObj" (selectionChange)="reloadAnalysis()" style="text-transform: capitalize;">
+              <mat-option *ngFor="let analysis of data.analyses" [value]="analysis.id">
+                  <span style="text-transform: capitalize;">{{analysis.name.includes(' label avg') ? 'Avg' : analysis.name}}</span>
+                  <span style="text-transform: capitalize;"> ({{analysis.label}})</span> 
+                  </mat-option> 
+            </mat-select>
+        </mat-form-field>
+        </div>
+      <div class="col-md-1"></div>
+    <div class="col-md-5" style="margin-top: 20px; position: relative; z-index: 2; height: 50px;">
+    
+    
+      <mat-accordion style="text-align:left;">
+        <mat-expansion-panel  class="spacee">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Metabolomics Measurements
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="row" style="padding: 10px;">
+            <form  >
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                  <tr>
+                    <th style="width: 50%;">Metabolite Name</th>
+                    <th style="width: 50%;">Fold Change Value</th>
+    
+                  </tr>
+                  </thead>
+    
+                  <tbody>
+    
+                  <tr *ngFor="let r of conTable;let i=index">
+                    <td style="width: 50%;">{{ r[0] }}</td>
+                    <td style="width: 50%;">{{ r[1] }}</td>
+    
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </form>
+          </div>
+        </mat-expansion-panel>  </mat-accordion>
+    </div>
+    </div>
+    <div *ngIf="data" class="panel panel-default" style="margin-top: 50px; margin-bottom: 30px;">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th style="width: 160px;"><h3>Study Name:</h3></th>
+            <th style="text-transform: capitalize;"><h3>{{data?.study_name}}</h3></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Method:</td>
+            <td style="text-transform: capitalize;">{{data?.method}}</td>
+          </tr>
+          <tr>
+            <td>Disease:</td>
+            <td style="text-transform: capitalize;">{{data?.disease}}</td>
+          </tr>
+          <!--
+          <tr>
+            <td>Start:</td>
+            <td style="text-transform: capitalize;">{{data?.start}}</td>
+          </tr>
+          -->
+        </tbody>
+      </table>
+    </div>
+    <div *ngIf="data && !data?.results_pathway">
+      <mat-spinner diameter="50" style="margin:30px auto 10px auto;"></mat-spinner>
+      <div style="text-align: center;">Analysis in progress... It may take a while depending on the number of samples. Please check back later.</div>
+    </div>
+    <div *ngIf="data?.results_pathway">
+      <div>
+        <pathway-histogram [pathwayScores]="data.results_pathway" [method]="data?.method"></pathway-histogram>
+      </div>
+      <div>
+        <similar-diseases [id]="id"></similar-diseases>
+      </div>
+      <div>
+        <disease-prediction [id]="id" [method]="data?.method"></disease-prediction>
+      </div>
+      <div>
+        <result-table [data]="[data]" [method]="data?.method"></result-table>
+      </div>
+    </div>    
+</div>

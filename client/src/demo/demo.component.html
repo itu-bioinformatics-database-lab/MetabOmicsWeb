@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+</head>
+
+
+
+
+<body>
+<div class="container">
+  <div class="page-header">
+    <h1>MetabOmicsDB <small>- About the project</small></h1>
+  </div>
+  <div class="col-lg-10">
+
+
+    <div class="panel panel-success" id="Link1">
+      <div class="panel-heading">Creating an Account</div>
+      <div class="panel-body">
+
+        Head to the top menu and click on ‘Login’ section, you will see 'Sign Up' text under the login button, click it and you will be redirected to the 'Sign Up' page to create a new account. As an other option, you may login as a demo user. 
+        <br><br>
+
+        <img class="img-responsive img-center" src="assets/demo/account1.png">
+        <br><br>
+
+        The user will have to fill the following form, then click the ‘Sign Up’ button, then the user will get a confirmation message for a successful registration, and can now login and proceed to use the website as a registered user.
+        <br><br>
+
+        <img class="img-responsive img-center" src="assets/demo/account2.png">
+        <br><br>
+
+      </div>
+    </div>
+
+
+    <div class="panel panel-warning" id="Link2">
+      <div class="panel-heading">Search</div>
+      <div class="panel-body">
+
+        <h4> Search For Pathways/Metabolites/Reactions </h4>
+        <ul>
+          <li> In MetabOmicsDB, we can search for the following from the main page:
+
+            <ul>
+              <li>Pathways </li>
+              <li>Metabolites </li>
+              <li>Reactions  </li>
+            </ul>
+          </li>
+        </ul>
+        You can enter the first few characters and our autocomplete service will show you the names close to your search.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/search1.png">
+        <br><br>
+
+        <h4> Search Metabolomics Analysis </h4>
+        You can find this subsection in the top menu 'Search' section.
+        For better user experience, our search services support autocomplete for possible search texts based on the search characters you enter.
+
+        In MetabOmicsDB we support searching public studies based on two search criteria:
+
+        <ul>
+          <li>Search studies based on Metabolites
+            <ul>
+              <li>
+                Enter the metabolite name you wish to find studies that include it, then you will be provided with a list of studies that include it.
+              </li>
+            </ul>
+          </li>
+
+          <li>Search studies based on Pathways
+            <ul>
+              <li>
+                Enter pathway name, change, diff quantifier, and diff amount and then press the 'Add' button and click 'Search' to get the results, you may choose multiple pathways to search at once.
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <img class="img-responsive img-center" src="assets/demo/search2.png">
+        <br><br>
+
+      </div>
+    </div>
+
+
+
+
+
+
+    <div class="panel panel-info" id="Link3">
+      <div class="panel-heading">Browse</div>
+      <div class="panel-body">
+        In MetabOmicsDB, we provide the option to browse pathways and analyzed studies.
+        You can access them from the top menu 'Browse' section.
+        <br><br>
+        <h4> Browse Pathways Page </h4>
+        Here we provide visualization and reaction information for each pathway, choose a pathway and its details along with a plot will be shown.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/browse1.png">
+        <br><br>
+        <h4>
+          Browse Metabolomics Analyses Page
+        </h4>
+        On this page, you can check the analyzed studies and also we provide the option to compare them by choosing a number of studies and pressing the 'Compare' button.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/browse2.png">
+        <br><br>
+
+
+      </div>
+    </div>
+
+    <div class="panel panel-primary" id="Link4">
+      <div class="panel-heading">Supported Data Formats
+      </div>
+      <div class="panel-body">
+        <!--<h3>Quick Notes: </h3>-->
+
+        In MetabOmicsDB, we provided sample files for each format we support, they are provided in the 'Documentation' section.
+        Metabolite names should be from one of our supported datasets:
+        <ul>
+          <li>ChEBI</li>
+          <li>HMDB</li>
+          <li>KEGG</li>
+          <li>PubChem</li>
+        </ul>
+
+
+
+        <img class="img-responsive img-center" src="assets/demo/formats.png">
+        <br>
+        <h4> CSV Format: </h4>
+
+        First column entries should contain metabolite names and the second column entries should include their corresponding values/measurements.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/csv.png"  >
+        <br>
+        <h4>JSON Format: </h4>
+        Keys should be metabolite names and the values should be their corresponding values/measurements.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/json.png">
+        <br>
+        <h4> Metabolitics Format:</h4>
+
+        <h5> In our format, we have two sheets: </h5>
+
+        <ul>
+          <li>Sheet one:
+            <ul>
+              <li>Sheet name should be “data”, it includes subjects ids/names and their corresponding metabolite names and  values/measurements.</li>
+              <li>The first row (starting from the second column) should include subject ids/names.</li>
+              <li>The first column(starting from the second row) should include metabolite names from one of our supported datasets, each metabolite row entry should include the corresponding values/measurements for the subjects.
+              </li>
+            </ul>
+            <br>
+            <img class="img-responsive img-center" src="assets/demo/sheet1.png">
+
+          </li>
+
+
+          <li>Sheet two:
+            <ul>
+              <li>Sheet name should be “meta”, it should include study name, group label, subject ids/names, and their corresponding labels.</li>
+              <li>The first row should include ‘study name’ as first entry and the study name of your choice as the second entry.</li>
+              <li>The second row should include ‘control/healthy/wildtype group’ in the first entry and its corresponding label in the second entry.</li>
+              <li>In the third row, the first entry should be ‘subject id’ and the second entry should be ‘group’ which will represent the subject label.</li>
+              <li>For the next columns (starting from row 4), first column should have the subject ids/names and second column should have the corresponding labels of the subject.</li>
+            </ul>
+            <br>
+            <img class="img-responsive img-center" src="assets/demo/sheet2.png">
+          </li>
+        </ul>
+
+
+        <h4>Metabolomics Workbench:</h4>
+        Please refer to the following link for a detailed tutorial on Metabolimics Workbench MWtab files format:
+        https://www.metabolomicsworkbench.org/data/tutorials.php
+
+
+
+        <br><br>
+
+
+      </div>
+    </div>
+
+
+
+
+    <div class="panel panel-default" id="Link5">
+      <div class="panel-heading">Analyze</div>
+      <div class="panel-body">
+
+        In the analyze section, we provided 3 options for the user to use our analysis service:
+        <ul>
+
+          <li>Uploading study files to be analyzed.</li>
+          <li>Manually adding metabolite changes to be analyzed.</li>
+          <li>Using a sample metabolite changes list.</li>
+        </ul>
+        <img class="img-responsive img-center" src="assets/demo/analyze1.png">
+
+        <br>
+        <h4> Upload File </h4>
+
+        When choosing this option, you will be directed to the following page with various file formats that MetabOmicsDB support, for detailed information about the formats refer to 'Supported Data Formats' section.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/analyze2.png">
+        <br>
+        Choose your preferred format, upload your study file, and you will be redirected to the following page:
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/analyze3.png">
+        <img class="img-responsive img-center" src="assets/demo/analyze4.png">
+        <br>
+
+        Now, whether you choose to upload file, enter metabolites manually or sample metabolites list you will be directed to this page with your study data processed to be sent to be analyzed, but first, you have to provide the necessary information that maybe not be included in your uploaded file:
+
+        <ul>
+          <li>The user should fill the 'Disease / Physiological Condition' entry for the study.</li>
+          <li>The user will have to provide us with a study name.</li>
+          <li>The user will have the option to make his study public or private.</li>
+          <li>We also give the option to manually add or remove metabolites changes.</li>
+          <li>Last Step, the user has to choose the analysis algorithm, we currently support three analysis algorithms:
+
+            <ul>
+              <li>Metabolitics (our own analysis)</li>
+              <li>Direct Pathway Mapping</li>
+              <li>Pathway Enrichment Analysis</li>
+            </ul>
+          </li>
+          <li>After clicking the 'Analyze' button, the user will be directed to the past analyses page.</li>
+
+
+        </ul>
+
+      </div>
+    </div>
+
+
+
+    <div class="panel panel-success" id="Link6">
+      <div class="panel-heading">Accessing Analysis Results</div>
+      <div class="panel-body">
+        Users are able to send their data to be analyzed and control whether the analysis results will be publicly available or kept private and only shown for the user.
+        To access analysis results, head to top menu 'Account' section, choose 'Past Analysis' subsection, and you will be redirected to your public and private study results. Then you check the results or compare them.
+        <br><br>
+        <h4>Public Analyses</h4>
+        <br>
+        <img class="img-responsive img-center" src="assets/demo/results1.png">
+        <br>
+        <h4>Private Analyses</h4>
+        <br>
+        <img class="img-responsive img-center" src="assets/demo/results2.png">
+
+        <h4> Analysis Results Page</h4>
+        When we access an analysis result page,
+        the  analysis  results  are presented in multiple levels of details in both visual and tabular forms.
+
+        A bar chart for the top 20 pathways with the highest absolute diff values is provided.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/disease1.png">
+        <img class="img-responsive img-center" src="assets/demo/disease2.png">
+        <img class="img-responsive img-center" src="assets/demo/disease3.png">
+
+        <br><br>
+        Below the bar plot, in a tabular form, all the pathways are listed with their computed diff
+        values. Next to each pathway, two buttons are placed. The left button visualizes the corresponding
+        pathway where each node represents a metabolite, and each edge represents a reaction. Edges are colored
+        and thickened according to the corresponding reactions’ diff value.
+        This form of visualization allows the user to quickly inspect what parts of the pathway experience the most
+        change.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/results-pathways.png">
+
+        <br>
+
+        The right button, on the other hand,lists all the pathway reactions and their diff values in
+        tabular form.
+        <br><br>
+
+        <img class="img-responsive img-center" src="assets/demo/results-reaction.png">
+
+        <br><br>
+
+
+
+      </div>
+    </div>
+
+
+
+
+    <div class="panel panel-success" id="Link7">
+      <div class="panel-heading">Comparison of Different Analysis Results for Different Datasets</div>
+      <div class="panel-body">
+        MetabOmicsDB allows users to compare and contrast their metabolomics data analysis results to
+        their previous analysis results,
+         other users’ publicly available analysis results,
+         and diseases and physiologicalconditions stored in the database.
+        To achieve that, you have to access the 'Browse Analysis' subsection from the 'Browse' section in the top menu.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/compare1.png">
+        <br>
+        Next, the user will have to choose studies to compare. In order to compare between studies, the user will have to click the check buttons for all the studies he wishes to compare.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/compare2.png">
+        <br>
+        Next, the user will go up to the top menu and click the button 'Compare', in our case we choose two studies. Next we will be redirected to the comparison page.
+
+        The comparison page features a heat map at the top
+        where the rows represent pathways with the highest variance in terms of their diff values among the compared analysis
+        results, and the columns represent the compared analysis results. Each cell in the heatmap is colored according to the corresponding pathway diff values.
+
+        in the lower part of the page we will find each subjects pathways values.
+
+
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/compare3.png">
+        <br><br>
+
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="panel panel-success" id="Link8">
+      <div class="panel-heading">Disease Association</div>
+      <div class="panel-body">
+        <ul>
+          <li>Another novel feature of the MetabOmicsDB is that for each metabolomics
+            analysis result, the closest set of diseases and physiological conditions are
+            computed based on the similarity of the pathway-level metabolic behavior.</li>
+          <li>MetabOmicsDB stores metabolomics analysis results
+            of a number of diseases (pre-computed and recorded in its database).
+            Then, for each user submitted analysis run, the user is presented the
+            top 5 diseases (e.g., diabetes) that have most similarity to the currently
+            analyzed metabolomics data in terms of the activity level distribution over
+            the metabolic pathways.</li>
+
+        </ul>
+
+
+        To check disease association, we access our analysis results page,
+        then we will notice under the pathways bar plot there is a 'Similarity-based Disease Prediction' section, in it we will provide the top 5 similar
+        cases and their similarity value to the analysis.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/similarity.png">
+        <br><br><br>
+      </div>
+    </div>
+
+    <div class="panel panel-success" id="Link9">
+      <div class="panel-heading">Disease Prediction</div>
+      <div class="panel-body">
+        Disease prediction is an additional metabolomics data processing capability of MetabOmicsDB. Machine learning models are trained by 
+        MetabOmicsDB using past metabolomics data analysis findings for every disease on a regular basis. By saving the results 
+        as binary files, trained machine learning models can be used for prediction without the need for further training. In order to 
+        anticipate whether a certain disease is associated with the analysis or not, stored machine learning models are performed on 
+        the reaction diff values of future metabolomics data analysis findings.
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/prediction.png">
+        <br><br><br>
+      </div>
+    </div>
+
+    <div class="panel panel-success" id="Link10">
+      <div class="panel-heading">How to Interpret Diff Scores</div>
+      <div class="panel-body">
+        At a high level, a pathway/reaction “diff” value represents the differentiation of the pathway/reaction activity for an individual 
+        compared to healthy individuals. Hence, a positive diff value is interpreted as increased activity, while a negative diff value is 
+        interpreted as decreased activity for a pathway/rection. From a technical perspective, a diff score represents the change in the range 
+        of possible flux values for a reaction. That is, a positive diff score indicates that the actual activity level of a reaction would be 
+        drawn from a range that includes mostly larger values, while a negative score means that the actual activity level would be drawn from 
+        a range that includes mostly smaller values. Hence, in positive diff cases, the likelihood of having larger flux values is higher compared 
+        to healthy individuals, while in negative diff cases, the likelihood of having smaller flux values is higher for the corresponding 
+        reactions/pathways. The magnitude of a diff score represents the expectation of how much higher (for positive scores) or lower 
+        (for negative scores) the flux magnitude of a reaction would be in a patient compared to the average healthy reference values. 
+        For simplicity, we assume that flux values within each flux interval are uniformly distributed. As an example, for a reaction R, let [2, 4]
+        be the reference flux interval obtained from healthy individuals, and [3, 5] be the flux interval computed for a patient. R may have the 
+        following possible flux value combinations in a healthy individual and the patient (only integer flux values are considered in the example 
+        for brevity, even though real flux values are also possible in practice): [(2, 3), (2, 4), (2, 5), (3, 3), (3, 4), (3, 5), (4, 3), (4, 4), 
+        (4, 5)]. Then, the set of corresponding flux differences between the patient and a healthy individual would be [1, 2, 3, 0, 1, 2, -1, 0, 1].
+        The average (i.e., expectation) of these differences would be 1, which is also the diff score for R. The below figure illustrates several 
+        example scenarios and the associated diff scores. In each case, the left-hand side shows the original flux intervals as computed by flux
+        variability analysis (FVA), while the right-hand side shows the corresponding sub-intervals and the associated diff values. 
+        The figure presents examples of positive diff scores. The symmetric cases (where patient and reference-healthy labels are switched)
+        would provide examples of negative diff scores.
+
+        <br><br>
+        <img class="img-responsive img-center" src="assets/demo/diffscores.png" style="width: 90%; height: auto;">
+        <br><br><br>
+      </div>
+    </div>
+
+
+  </div>
+
+
+  <div class="col-lg-2" id="stay">
+    <div class="list-group">
+      <a href="http://metabolitics.itu.edu.tr/demo#Link1" class="list-group-item">Creating an Account</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link2" class="list-group-item">Search</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link3" class="list-group-item">Browse</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link4" class="list-group-item">Supported Data Formats</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link5" class="list-group-item">Analyze</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link6" class="list-group-item">Accessing Analysis Results</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link7" class="list-group-item">Comparison of Different Analysis Results for Different Datasets</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link8" class="list-group-item">Disease Association</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link9" class="list-group-item">Disease Prediction</a>
+      <a href="http://metabolitics.itu.edu.tr/demo#Link10" class="list-group-item">How to Interpret Diff Scores</a>
+
+
+    </div>
+    <div class="list-group">
+      <a href="https://github.com/itu-bioinformatics-database-lab/metabolitics-api-v3" target="_blank" class="list-group-item active">
+        <h4 class="list-group-item-heading">GitHub</h4>
+        <p class="list-group-item-text">Source Code</p>
+      </a>
+    </div>
+  </div>
+</div>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<div class="transcriptomics-measurement-container">
+  <div class="header">
+    <h2>Transcriptomics Data Entry</h2>
+    <p class="description">Choose how you would like to input your transcriptomics data</p>
+  </div>
+
+  <div class="options-section">
+    <div class="option-card">
+      <div class="option-icon">
+        <i class="fas fa-upload"></i>
+      </div>
+      <h3>Upload File</h3>
+      <p>Upload your gene expression data from a file in various formats</p>
+      <a [routerLink]="['/analyze/transcriptomics']" class="btn-primary">
+        Upload File
+      </a>
+    </div>
+
+    <div class="option-card">
+      <div class="option-icon">
+        <i class="fas fa-edit"></i>
+      </div>
+      <h3>Manual Entry</h3>
+      <p>Manually input your gene expression changes</p>
+      <a [routerLink]="['../manual']" class="btn-primary">
+        Manual Entry
+      </a>
+    </div>
+
+    <div class="option-card">
+      <div class="option-icon">
+        <i class="fas fa-dna"></i>
+      </div>
+      <h3>Sample Data</h3>
+      <p>Use our pre-defined sample gene expression list</p>
+      <a [routerLink]="['../sample']" class="btn-primary">
+        Use Sample Data
+      </a>
+    </div>
+  </div>
+</div> 

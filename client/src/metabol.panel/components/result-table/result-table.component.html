@@ -1,0 +1,39 @@
+<div class="table-container">
+  <h4 *ngIf="title" class="table-header">Pathway-Level {{title}}</h4>
+   <ng-container *ngIf="title == 'Diff Score'"> (<a [routerLink] = "['/demo']" [fragment]="'Link10'" style="font-size: 16px;">How to interpret diff scores?</a>)</ng-container>
+  <button class="csv-download-button"  (click)="downloadCSV()">Export Pathway Scores as CSV</button>
+</div>
+
+<ngx-datatable
+   class="material"
+   [rows]="tableData"
+   [columnMode]="'flex'"
+   [rowHeight]="'auto'"
+   [columns]="columns"
+   [sorts]="[{prop: 'name'}]" style="border-radius: 5px; padding: 5px; margin-bottom: 30px;">
+  <ngx-datatable-column name="Name" [flexGrow]="3" >
+    <ng-template let-value="value" ngx-datatable-cell-template>
+      <a [routerLink]="['/', 'search/subsystem', 'detail', value]" target="_blank">
+	<strong>{{value}}</strong>
+      </a>
+    </ng-template>
+  </ngx-datatable-column>
+  <ng-template ngFor let-n [ngForOf]="analysisNames" let-i="index">
+    <ngx-datatable-column name="{{n | titlecase}}" [flexGrow]="3">
+      <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+	{{ row[n] }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column [flexGrow]="1">
+      <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+	<i (click)="openPathwayDialog(row['name'], i)"
+     class="fas fa-lg fa-microscope fa-border fa-pull-left">
+	</i>
+	<i (click)="openReactionDialog(row['name'], i)"
+	   class="fas fa-lg fa-table fa-border fa-pull-left">
+	</i>
+      </ng-template>
+    </ngx-datatable-column>
+  </ng-template>
+</ngx-datatable>
+
