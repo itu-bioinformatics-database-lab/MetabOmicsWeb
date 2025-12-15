@@ -115,7 +115,7 @@ export class UploadService implements OnDestroy {
   navigateToOmicsType(omicsType: string) {
     switch(omicsType) {
       case 'Metabolomics':
-        this.router.navigate(['/analyze/metabolomics']);
+        this.router.navigate(['/analyze/metabolomics-measurement']);
         break;
       case 'Transcriptomics':
         this.router.navigate(['/analyze/transcriptomics']);

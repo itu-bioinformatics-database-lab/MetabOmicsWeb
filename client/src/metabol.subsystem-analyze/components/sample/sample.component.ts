@@ -1,11 +1,10 @@
 import { AppDataLoader } from './../../../metabol.common/services/data-loader/data-loader.service';
 import {HttpClient} from "@angular/common/http";
-import {ConcentrationTableComponent} from "../concentration-table/concentration-table.component";
-import {MetaboliteConcentration} from "../../models/metaboliteConcentration";
 import { Component, OnInit } from '@angular/core';
-import * as _ from 'lodash';
+import { Router } from '@angular/router';
 import synonyms from '../../../assets/datasets/synonyms_latest.json';
-import { AppSettings } from '../../../app/';
+import { OmicsSelectionService, OmicsData } from '../../services/omics-selection.service';
+import { UploadService } from '../../services/upload/upload.service';
 
 @Component({
   selector: 'app-sample',
@@ -14,40 +13,66 @@ import { AppSettings } from '../../../app/';
 })
 export class SampleComponent implements OnInit {
 
-  conTable: Array<[string, number, string, string, boolean]> = [];
+  mConTable: Array<[string, number, string, string, boolean]> = [];
   unmappedMetabolites: Array<[string, number, string, string, boolean]> = [];
   public synonymList: [] = synonyms;
-  constructor(private http: HttpClient, private loader: AppDataLoader) { }
+  selectedOmics: OmicsData[] = [];
+  loading: boolean = false;
+
+  constructor(
+    private http: HttpClient, 
+    private loader: AppDataLoader,
+    private router: Router,
+    private omicsService: OmicsSelectionService,
+    public uploadService: UploadService
+  ) { }
 
   ngOnInit() {
+    this.selectedOmics = this.omicsService.getSelectedOmicsArray();
+    if (this.selectedOmics.length === 0) {
+      // If no omics types are selected, redirect back to welcome
+      this.router.navigate(['/analyze/welcome']);
+      return;
+    }
+    
+    // Initialize omics vector if not already initialized
+    if (this.uploadService.omicsVector.length === 0) {
+      this.uploadService.initializeOmicsVector();
+    }
+    
+    // Initialize mConTable from UploadService
+    this.mConTable = this.uploadService.mConTable;
+    
+    // Load sample data for Metabolomics
     this.loadSampleDataSet();
   }
 
   loadSampleDataSet() {
+    this.loading = true;
     this.http.get('assets/example-analyze-doc-files/example_metabolitic.json')
-
       .subscribe((data:any) => {
         this.loader.get('Recon3D', (recon) => {
           // tslint:disable-next-line:forin
           for (let key in data) {
             let change = data[key];
             if (recon.metabolites[key]) {
-              this.conTable.push([key, change, recon.metabolites[key].id, recon.metabolites[key].name, true]);
+              this.mConTable.push([key, change, recon.metabolites[key].id, recon.metabolites[key].name, true]);
             } else {
               if (this.synonymList[key]) {
                 const name = this.prioritizeMetabolites(this.synonymList[key]);
                 if (recon.metabolites[name]) {
-                  this.conTable.push([key, change, name, recon.metabolites[name].name, true]);
+                  this.mConTable.push([key, change, name, recon.metabolites[name].name, true]);
                 } else {
-                  this.conTable.push([key, change, name, name, true]);
+                  this.mConTable.push([key, change, name, name, true]);
                 }
               } else {
-                this.conTable.push([key, change, '-', '-', false]);
+                this.mConTable.push([key, change, '-', '-', false]);
               }
             }
           }
+          this.unmappedMetabolites = this.mConTable.filter((m) => {return m[4] == false;})
+          this.loading = false;
         })
-        this.unmappedMetabolites = this.conTable.filter((m) => {return m[4] == false;})
       });
   }
   prioritizeMetabolites(metaboliteList) {
@@ -77,6 +102,47 @@ export class SampleComponent implements OnInit {
   getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  onBackClick() {
+    this.router.navigate(['/analyze/welcome']);
+  }
+
+  get isCurrentTableEmpty(): boolean {
+    return !this.mConTable || this.mConTable.length === 0;
+  }
+
+  canProceed(): boolean {
+    // For sample data, user can proceed if data has been loaded
+    return !this.isCurrentTableEmpty;
+  }
+
+  getContinueButtonText(): string {
+    const selectedOmics = this.omicsService.getSelectedOmicsArray();
+    if (selectedOmics.length === 1) {
+      return 'Continue to Analysis';
+    } else if (selectedOmics.length > 1) {
+      const currentIndex = this.omicsService.getCurrentOmicsIndex();
+      const isLastOmics = currentIndex >= selectedOmics.length - 1;
+      
+      if (isLastOmics) {
+        return 'Continue to Analysis';
+      } else {
+        const nextOmicsType = selectedOmics[currentIndex + 1].type;
+        return `Continue to ${nextOmicsType}`;
+      }
+    }
+    return 'Continue';
+  }
+
+  onContinue() {
+    // Mark Metabolomics as having data entered
+    if (!this.isCurrentTableEmpty) {
+      this.omicsService.updateOmicsData('Metabolomics', { fileName: 'Sample Data' });
+    }
+    
+    // Use upload service to proceed to next omics or submit
+    this.uploadService.proceed('Metabolomics');
   }
 }

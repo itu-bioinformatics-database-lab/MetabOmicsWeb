@@ -41,7 +41,14 @@ export class WelcomeComponent {
     this.uploadService.initializeOmicsVectorFromArray(this.selectedOmics);
     
     // Navigate to the first selected omics type
-    const firstOmicsType = this.selectedOmics[0].toLowerCase().replace(/\s+/g, '-');
-    this.router.navigate([`/analyze/${firstOmicsType}-measurement`]);
+    const firstOmicsType = this.selectedOmics[0];
+    // Only Metabolomics has a measurement page, all others go directly to upload
+    if (firstOmicsType === 'Metabolomics') {
+      this.router.navigate(['/analyze/metabolomics-measurement']);
+    } else {
+      // For all other omics types, navigate directly to their upload page
+      const firstOmicsTypePath = firstOmicsType.toLowerCase().replace(/\s+/g, '-');
+      this.router.navigate([`/analyze/${firstOmicsTypePath}`]);
+    }
   }
 } 

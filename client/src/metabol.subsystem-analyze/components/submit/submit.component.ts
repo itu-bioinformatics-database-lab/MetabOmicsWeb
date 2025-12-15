@@ -390,4 +390,3 @@ export class SubmitComponent implements OnInit {
   //TODO: Add data change functions here for different tabs.
 
 }
-

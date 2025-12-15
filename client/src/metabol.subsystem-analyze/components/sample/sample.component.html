@@ -1,9 +1,30 @@
-<!--
-TODO FIX TABLE ISSUE
--->
+<div class="upload-page">
+  <div class="header">
+    <h2>Sample Data</h2>
+  </div>
 
-<div class="row">
-  <div class="col-md-12">
-    <concentration-table [mConTable]="mConTable" [unmappedMetabolites]="unmappedMetabolites"></concentration-table>
+  <div *ngIf="mConTable && mConTable.length > 0">
+    <concentration-table 
+      [mConTable]="mConTable"
+      [currentOmics]="'Metabolomics'">
+    </concentration-table>
+  </div>
+
+  <div *ngIf="loading && isCurrentTableEmpty">
+    <mat-spinner diameter="50" style="margin:30px auto 10px auto;"></mat-spinner>
+    <div style="text-align: center;">
+      Loading sample metabolites data. Please wait...
+    </div>
+  </div>
+
+  <div class="actions">
+    <div class="left">
+      <button class="btn btn-default" (click)="onBackClick()">Back</button>
+    </div>
+    <div class="right" *ngIf="canProceed()">
+      <button class="btn btn-primary" (click)="onContinue()">
+        {{ getContinueButtonText() }}
+      </button>
+    </div>
   </div>
 </div>

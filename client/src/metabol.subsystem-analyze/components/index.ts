@@ -17,9 +17,6 @@ export * from './mirna/mirna.component';
 
 // Measurement components
 export * from './metabolomics-measurement/metabolomics-measurement.component';
-export * from './transcriptomics-measurement/transcriptomics-measurement.component';
-export * from './proteomics-measurement/proteomics-measurement.component';
-export * from './mirna-measurement/mirna-measurement.component';
 
 // Upload components
 export * from './proteomics-upload/proteomics-upload.component';

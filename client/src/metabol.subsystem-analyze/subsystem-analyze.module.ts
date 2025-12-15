@@ -29,12 +29,9 @@ import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import { MetabolomicsComponent } from './components/metabolomics/metabolomics.component';
 import { TranscriptomicsComponent } from './components/transcriptomics/transcriptomics.component';
 import { MetabolomicsMeasurementComponent } from './components/metabolomics-measurement/metabolomics-measurement.component';
-import { TranscriptomicsMeasurementComponent } from './components/transcriptomics-measurement/transcriptomics-measurement.component';
 import { ProteomicsComponent } from './components/proteomics/proteomics.component';
-import { ProteomicsMeasurementComponent } from './components/proteomics-measurement/proteomics-measurement.component';
 import { ProteomicsUploadComponent } from './components/proteomics-upload/proteomics-upload.component';
 import { MirnaComponent } from './components/mirna/mirna.component';
-import { MirnaMeasurementComponent } from './components/mirna-measurement/mirna-measurement.component';
 import { MirnaUploadComponent } from './components/mirna-upload/mirna-upload.component';
 import { SubmitComponent } from './components/submit/submit.component';
 
@@ -67,12 +64,9 @@ import { SubmitComponent } from './components/submit/submit.component';
     MetabolomicsComponent,
     MetabolomicsMeasurementComponent,
     TranscriptomicsComponent,
-    TranscriptomicsMeasurementComponent,
     ProteomicsComponent,
-    ProteomicsMeasurementComponent,
     ProteomicsUploadComponent,
     MirnaComponent,
-    MirnaMeasurementComponent,
     MirnaUploadComponent,
     SubmitComponent
   ],

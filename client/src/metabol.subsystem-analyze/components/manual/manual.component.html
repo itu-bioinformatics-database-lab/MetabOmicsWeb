@@ -1,13 +1,23 @@
-<!--
-TODO
+<div class="upload-page">
+  <div class="header">
+    <h2>Manual Data Entry</h2>
+  </div>
 
-FIX CON TABLE
+  <div>
+    <concentration-table 
+      [mConTable]="mConTable"
+      [currentOmics]="'Metabolomics'">
+    </concentration-table>
+  </div>
 
--->
-
-
-<div class="row">
-  <div class="col-md-12">
-    <concentration-table [mConTable]="[]" [unmappedMetabolites]="[]"></concentration-table>
+  <div class="actions">
+    <div class="left">
+      <button class="btn btn-default" (click)="onBackClick()">Back</button>
+    </div>
+    <div class="right" *ngIf="canProceed()">
+      <button class="btn btn-primary" (click)="onContinue()">
+        {{ getContinueButtonText() }}
+      </button>
+    </div>
   </div>
 </div>
