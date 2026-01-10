@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import * as _ from 'lodash';
-
+import { MatFormFieldModule, MatInputModule, MatAutocompleteModule } from '@angular/material';
 import { LoginService } from "../../../metabol.auth/services";
 import { AppSettings } from '../../../app/';
 import { Observable } from 'rxjs';
@@ -380,6 +380,9 @@ export class SubmitComponent implements OnInit {
 
       });
   }
+  displayFn(disease?: Disease): string | undefined {
+      return disease ? disease.name : undefined;
+    }
 
   private _filter(name: string): Disease[] {
       const filterValue = name.toLowerCase();

@@ -34,20 +34,22 @@ class PasswordChangeSchema(Schema):
     new_password = fields.String(required=True)
 
 #
-class UserSchema(ma.ModelSchema):
+class UserSchema(ma.SQLAlchemyAutoSchema):
     name = fields.String(required=True)
     surname = fields.String(required=True)
     email = fields.Email(required=True)
     affiliation = fields.String(required=True)
     password = fields.String(required=True, load_only=True)
-    # confirmPassword = fields.String(required=True, load_only=True)
+    confirmPassword = fields.String(required=True, load_only=True)
 
     class Meta:
         model = User
+        load_instance = True
+        include_fk = True
         exclude = ('analysis', )
 
 
-class AnalysisSchema(ma.ModelSchema):
+class AnalysisSchema(ma.SQLAlchemyAutoSchema):
     results = fields.Dict()
     visualization = fields.Dict()
 
@@ -55,6 +57,8 @@ class AnalysisSchema(ma.ModelSchema):
 
     class Meta:
         model = Analyses
+        load_instance = True
+        include_fk = True
         exclude = ('user', )
 
 

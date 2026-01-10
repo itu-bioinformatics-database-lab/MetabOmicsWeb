@@ -4,8 +4,9 @@ from flask_jwt import jwt_required, current_identity
 
 from ..app import app
 from ..schemas import *
-from ..models import db, User, Analysis
+from ..models import db, User, Analyses
 from json import dump,dumps
+from marshmallow import ValidationError
 
 @app.route("/spec")
 def spec():
@@ -57,9 +58,13 @@ def sign_up():
         description: User created
     """
     print (request.json , "\n-----------------------------\n")
-    (data, error) = UserSchema().load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+      data = UserSchema().load(request.json)
+    except ValidationError as err:
+      return jsonify(err.messages), 400
+
+    if not request.json:
+        return "", 404
 
     if User.query.filter_by(email=data.email).first():
         return jsonify({'email': ['this email in use']}), 400
@@ -121,9 +126,11 @@ def auth_update():
       200:
         description: User info
     """
-    (data, error) = UserSchema(exclude=('password', )).load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+      data = UserSchema(exclude=('password', )).load(request.json)
+    except ValidationError as err:
+      return jsonify(err.messages), 400
+
     current_identity.name = data.name
     current_identity.surname = data.surname
     current_identity.email = data.email
@@ -164,11 +171,12 @@ def auth_change_password():
       200:
         description: User info
     """
-    (data, error) = PasswordChangeSchema().load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+      data = PasswordChangeSchema().load(request.json)
+    except ValidationError as err:
+      return jsonify(err.messages), 400
     if current_identity.password != data['old_password']:
         return '', 401
     current_identity.password = data['new_password']
     db.session.commit()
-    return ''
+    return '', 200

@@ -128,7 +128,7 @@ def enhance_synonyms(metabolites):
 @celery.task(name='train_save_model')
 def train_save_model():
     print('Training and saving models...')
-    disease_ids = db.session.query(AnalysisMetadata.disease_id).filter(AnalysisMetadata.group != 'not_provided').filter(AnalysisMetadata.method_id == 1).distinct()
+    disease_ids = db.session.query(AnalysisMetadata.disease_id).filter(AnalysisMetadata.group != 'not_provided').filter(AnalysisMetadata.analysis_method_id == 1).distinct()
     for disease_id, in disease_ids:
         seed = 41
         random.seed(seed)
@@ -137,7 +137,7 @@ def train_save_model():
         disease_name = AnalysisMetadata.query.get(disease_id).name
         disease_synonym = AnalysisMetadata.query.get(disease_id).synonym
         dataset_ids = db.session.query(AnalysisMetadata.id).filter(AnalysisMetadata.disease_id == disease_id).filter(
-            AnalysisMetadata.group != 'not_provided').filter(AnalysisMetadata.method_id == 1).all()
+            AnalysisMetadata.group != 'not_provided').filter(AnalysisMetadata.analysis_method_id == 1).all()
         results_reactions_labels = db.session.query(Analyses).filter(Analyses.type == 'public').filter(
             Analyses.dataset_id.in_(dataset_ids)).filter(Analyses.results_reaction != None).with_entities(
                 Analyses.results_reaction, Analyses.label).all()

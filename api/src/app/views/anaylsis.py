@@ -19,6 +19,7 @@ import pickle
 from ..pe import *
 from metabomics.preprocessing import MetaboliticsPipeline
 import sys
+from marshmallow import ValidationError
 
 
 
@@ -59,10 +60,11 @@ def fva_analysis():
       401:
         description: Analysis is not yours
     """
+    try:
+        data = AnalysisInputSchema().load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
-    (data, error) = AnalysisInputSchema().load(request.json)
-    if error:
-        return jsonify(error), 400
     if not request.json:
         return "", 404
 
@@ -83,7 +85,7 @@ def fva_analysis():
         disease = Diseases.query.get(request.json['disease'])
         study = AnalysisMetadata(
             name=request.json['study_name'],
-            method_id=1,
+            analysis_method_id=1,
             diffusion_id=1 if "Transcriptomes" in data else None,
             group=request.json["group"],
             disease_id=disease.id,
@@ -132,7 +134,8 @@ def fva_analysis():
                         X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
 
                 metabolomics_data = OmicsDatasets(
-                    metabolomics_data = value["Metabolites"] if healthy_metab_data == None else X_t,
+                    omics_type = "metabolomics",
+                    omics_data= value["Metabolites"] if healthy_metab_data == None else X_t,
                     owner_email = str(user),
                     is_public = True if request.json['public'] else False
                 )
@@ -141,7 +144,8 @@ def fva_analysis():
 
                 if(X_gene_scaled is not None):
                     transcriptomics_data = OmicsDatasets(
-                        transcriptomics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
+                        omics_type = "transcriptomics",
+                        omics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
                         owner_email = str(user),
                         is_public = True if request.json['public'] else False
                     )
@@ -149,9 +153,10 @@ def fva_analysis():
                 metabolomics_data.disease_id = disease.id
                 metabolomics_data.disease = disease
                 db.session.add(metabolomics_data)
-                transcriptomics_data.disease_id = disease.id
-                transcriptomics_data.disease = disease
-                db.session.add(transcriptomics_data)
+                if( transcriptomics_data is not None):
+                    transcriptomics_data.disease_id = disease.id
+                    transcriptomics_data.disease = disease
+                    db.session.add(transcriptomics_data)
                 db.session.commit()
 
 
@@ -185,9 +190,11 @@ def fva_analysis():
 @app.route('/analysis/fva/public', methods=['POST'])
 def fva_analysis_public():
 
-    (data, error) = AnalysisInputSchema2().load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+        data = AnalysisInputSchema2().load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
     if not request.json:
         return "", 404
     # print(request.json)
@@ -210,7 +217,7 @@ def fva_analysis_public():
         disease = Diseases.query.get(request.json['disease'])
         study = AnalysisMetadata(
             name=request.json['study_name'],
-            method_id=1,
+            analysis_method_id=1,
             diffusion_id=1 if "Transcriptomes" in data else None,
             group=request.json["group"],
             disease_id=disease.id,
@@ -278,9 +285,10 @@ def fva_analysis_public():
 @jwt_required()
 def direct_pathway_mapping():
 
-    (data, error) = AnalysisInputSchema().load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+        data = AnalysisInputSchema().load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
     if not request.json:
         return "", 404
 
@@ -300,7 +308,7 @@ def direct_pathway_mapping():
         disease = Diseases.query.get(request.json['disease'])
         study = AnalysisMetadata(
             name=data['study_name'],
-            method_id=2,
+            analysis_method_id=2,
             diffusion_id=1 if "Transcriptomes" in data else None,
             status=True,
             group=data["group"],
@@ -348,7 +356,8 @@ def direct_pathway_mapping():
                         X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
 
                 metabolomics_data = OmicsDatasets(
-                    metabolomics_data = value["Metabolites"] if healthy_metab_data == None else X_t,
+                    omics_type = "metabolomics",
+                    omics_data = value["Metabolites"] if healthy_metab_data == None else X_t,
                     owner_email = str(user),
                     is_public = True if request.json['public'] else False
                 )
@@ -357,7 +366,8 @@ def direct_pathway_mapping():
 
                 if(X_gene_scaled is not None):
                     transcriptomics_data = OmicsDatasets(
-                        transcriptomics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
+                        omics_type = "transcriptomics",
+                        omics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
                         owner_email = str(user),
                         is_public = True if request.json['public'] else False
                     )
@@ -365,9 +375,10 @@ def direct_pathway_mapping():
                 metabolomics_data.disease_id = disease.id
                 metabolomics_data.disease = disease
                 db.session.add(metabolomics_data)
-                transcriptomics_data.disease_id = disease.id
-                transcriptomics_data.disease = disease
-                db.session.add(transcriptomics_data)
+                if( transcriptomics_data is not None):
+                    transcriptomics_data.disease_id = disease.id
+                    transcriptomics_data.disease = disease
+                    db.session.add(transcriptomics_data)
                 db.session.commit()
 
 
@@ -398,9 +409,10 @@ def direct_pathway_mapping():
 @app.route('/analysis/direct-pathway-mapping/public', methods=['GET', 'POST'])
 def direct_pathway_mapping2():
     # print(request.json)
-    (data, error) = AnalysisInputSchema2().load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+        data = AnalysisInputSchema2().load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
     if not request.json:
         return "", 404
 
@@ -416,7 +428,7 @@ def direct_pathway_mapping2():
         disease = Diseases.query.get(request.json['disease'])
         study = AnalysisMetadata(
             name=data['study_name'],
-            method_id=2,
+            analysis_method_id=2,
             diffusion_id=1 if "Transcriptomes" in data else None,
             status=True,
             group=data["group"],
@@ -489,9 +501,10 @@ def direct_pathway_mapping2():
 @jwt_required()
 def pathway_enrichment():
 
-    (data, error) = AnalysisInputSchema().load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+        data = AnalysisInputSchema().load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
     if not request.json:
         return "", 404
 
@@ -511,7 +524,7 @@ def pathway_enrichment():
         disease = Diseases.query.get(request.json['disease'])
         study = AnalysisMetadata(
             name=data['study_name'],
-            method_id=3,
+            analysis_method_id=3,
             diffusion_id=1 if "Transcriptomes" in data else None,
             status=True,
             group=data["group"],
@@ -559,7 +572,8 @@ def pathway_enrichment():
                         X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
 
                 metabolomics_data = OmicsDatasets(
-                    metabolomics_data = value["Metabolites"] if healthy_metab_data == None else X_t,
+                    omics_type = "metabolomics",
+                    omics_data = value["Metabolites"] if healthy_metab_data == None else X_t,
                     owner_email = str(user),
                     is_public = True if request.json['public'] else False
                 )
@@ -568,7 +582,8 @@ def pathway_enrichment():
 
                 if(X_gene_scaled is not None):
                     transcriptomics_data = OmicsDatasets(
-                        transcriptomics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
+                        omics_type = "transcriptomics",
+                        omics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
                         owner_email = str(user),
                         is_public = True if request.json['public'] else False
                     )
@@ -576,9 +591,10 @@ def pathway_enrichment():
                 metabolomics_data.disease_id = disease.id
                 metabolomics_data.disease = disease
                 db.session.add(metabolomics_data)
-                transcriptomics_data.disease_id = disease.id
-                transcriptomics_data.disease = disease
-                db.session.add(transcriptomics_data)
+                if( transcriptomics_data is not None):
+                    transcriptomics_data.disease_id = disease.id
+                    transcriptomics_data.disease = disease
+                    db.session.add(transcriptomics_data)
                 db.session.commit()
 
 
@@ -609,9 +625,10 @@ def pathway_enrichment():
 @app.route('/analysis/pathway-enrichment/public', methods=['GET', 'POST'])
 def pathway_enrichment2():
     # print(request.json)
-    (data, error) = AnalysisInputSchema2().load(request.json)
-    if error:
-        return jsonify(error), 400
+    try:
+        data = AnalysisInputSchema2().load(request.json)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
     if not request.json:
         return "", 404
 
@@ -627,7 +644,7 @@ def pathway_enrichment2():
         disease = Diseases.query.get(request.json['disease'])
         study = AnalysisMetadata(
             name=data['study_name'],
-            method_id=3,
+            analysis_method_id=3,
             diffusion_id=1 if "Transcriptomes" in data else None,
             status=True,
             group=data["group"],
@@ -770,11 +787,11 @@ def most_similar_diseases(id: int):
         return '', 404
     if not analysis.authenticated():
         return '', 401
-    analysis_method_id = AnalysisMetadata.query.get(analysis.dataset_id).method_id
+    analysis_method_id = AnalysisMetadata.query.get(analysis.dataset_id).analysis_method_id
     groups = db.session.query(AnalysisMetadata.group).all()
     groups = [group[0].lower() + ' label avg' for group in groups]
     public_analyses = db.session.query(Analyses).join(AnalysisMetadata).join(Diseases).filter(
-        Analyses.type == 'public').filter(AnalysisMetadata.method_id == analysis_method_id).filter(
+        Analyses.type == 'public').filter(AnalysisMetadata.analysis_method_id == analysis_method_id).filter(
             Analyses.results_pathway != None).filter(
                 or_(Analyses.label == 'not_provided', and_(Analyses.label.like('%label avg%'), ~Analyses.label.in_(groups)))).with_entities(
                     Diseases.name, Analyses.results_pathway, Diseases.synonym).all()
@@ -851,7 +868,7 @@ def analysis_details(type):
     for item in data:
         analyses = Analyses.query.filter_by(type='public', dataset_id=item.id).with_entities(
             Analyses.id, Analyses.name, Analyses.dataset_id, Analyses.start_time, Analyses.end_time)
-        analysisMethod = AnalysisMethod.query.get(item.method_id)
+        analysisMethod = AnalysisMethod.query.get(item.analysis_method_id)
         diffusionMethod = DiffusionMethod.query.get(item.diffusion_id)
         disease = Diseases.query.get(item.disease_id)
         group = item.group
@@ -917,7 +934,7 @@ def user_analysis():
         for item in data:
             analyses = Analyses.query.filter_by(owner_user_id=current_identity.id, type='private', dataset_id=item.id).with_entities(
             Analyses.id, Analyses.name, Analyses.dataset_id, Analyses.start_time, Analyses.end_time)
-            analysisMethod = AnalysisMethod.query.get(item.method_id)
+            analysisMethod = AnalysisMethod.query.get(item.analysis_method_id)
             diffusionMethod = DiffusionMethod.query.get(item.diffusion_id)
             disease = Diseases.query.get(item.disease_id)
             group = item.group
@@ -968,7 +985,7 @@ def analysis_detail(id):
     metabolomics_data = OmicsDatasets.query.get(analysis.omics_data_id)
     study = AnalysisMetadata.query.get(analysis.dataset_id)
     group = study.group
-    method = AnalysisMethod.query.get(study.method_id)
+    method = AnalysisMethod.query.get(study.analysis_method_id)
     disease = Diseases.query.get(study.disease_id)
     data = {
         'case_name': analysis.name,
@@ -1017,9 +1034,10 @@ def search_analysis_by_change():
           type: string
           required: true
     """
-    (data, error) = PathwayChangesScheme().load(request.json, many=True)
-    if error:
-        return jsonify(error), 400
+    try:
+        data = PathwayChangesScheme().load(request.json, many=True)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
     analyses = Analyses.query.filter_by_change_many(data).filter_by_change_amount_many(data).filter_by_authentication().with_entities(Analyses.id, Analyses.name, Analyses.dataset_id)
     temp_data = {}
     for analysis in analyses:
@@ -1029,7 +1047,7 @@ def search_analysis_by_change():
     c = 0
     for item in temp_data:
         study = AnalysisMetadata.query.get(item)
-        method = AnalysisMethod.query.get(study.method_id)
+        method = AnalysisMethod.query.get(study.analysis_method_id)
         for (id, name) in temp_data[item]:
             returned_data[c] = {'anlysisId':study.id, 'name': study.name, 'case': id ,"method":method.name}
         c+=1

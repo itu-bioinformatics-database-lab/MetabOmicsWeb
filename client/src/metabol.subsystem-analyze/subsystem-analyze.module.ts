@@ -36,23 +36,6 @@ import { MirnaUploadComponent } from './components/mirna-upload/mirna-upload.com
 import { SubmitComponent } from './components/submit/submit.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatSlideToggleModule,
-    MatAutocompleteModule,
-    MatTableModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCardModule,
-    MatTabsModule,
-    MatRippleModule,
-    MatProgressSpinnerModule,
-    subsystemAnalyzeRouting,
-    MetabolCommonModule
-  ],
   declarations: [
     ConcentrationTableComponent,
     ManualComponent,
@@ -69,6 +52,23 @@ import { SubmitComponent } from './components/submit/submit.component';
     MirnaComponent,
     MirnaUploadComponent,
     SubmitComponent
+  ],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatSlideToggleModule,
+    MatAutocompleteModule,
+    MatTableModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCardModule,
+    MatTabsModule,
+    MatRippleModule,
+    MatProgressSpinnerModule,
+    subsystemAnalyzeRouting,
+    MetabolCommonModule
   ],
   providers: [
     OmicsSelectionService

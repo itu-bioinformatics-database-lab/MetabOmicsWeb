@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist, squareform
 
-import plotly.plotly as py
+import plotly.offline as py
 from plotly.graph_objs import *
 from plotly import figure_factory as ff
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
