@@ -86,7 +86,7 @@ def fva_analysis():
         study = AnalysisMetadata(
             name=request.json['study_name'],
             analysis_method_id=1,
-            diffusion_id=1 if "Transcriptomes" in data else None,
+            diffusion_id=1 if "transcriptomes" in data else None,
             group=request.json["group"],
             disease_id=disease.id,
             disease=disease)
@@ -97,15 +97,15 @@ def fva_analysis():
         healthy_metab_data = None
         healthy_gene_data = None
         for key,value in data['analysis'].items():
-            if len(value['Metabolites']) > 0:
+            if len(value['metabolites']) > 0:
                 if value['Label'] == data['group'].lower() + ' label avg':
-                    healthy_metab_data = value['Metabolites']
-                    healthy_gene_data = value.get('Transcriptomes', None)
+                    healthy_metab_data = value['metabolites']
+                    healthy_gene_data = value.get('transcriptomes', None)
 
 
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
-            current_metabolites = value["Metabolites"]
-            current_genes = value.get('Genes', {})
+            current_metabolites = value["metabolites"]
+            current_genes = value.get('transcriptomes', {})
             if len(current_metabolites) > 0:
                 if healthy_metab_data != None:
                     # 1. Handle zeros for current Metabolites
@@ -133,30 +133,30 @@ def fva_analysis():
                         # Calculate scaled genes
                         X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
 
-                metabolomics_data = OmicsDatasets(
-                    omics_type = "metabolomics",
-                    omics_data= value["Metabolites"] if healthy_metab_data == None else X_t,
+                metabolite_data = OmicsDatasets(
+                    omics_type = "metabolite",
+                    omics_data= value["metabolites"] if healthy_metab_data == None else X_t,
                     owner_email = str(user),
                     is_public = True if request.json['public'] else False
                 )
 
-                transcriptomics_data = None
+                transcriptome_data = None
 
                 if(X_gene_scaled is not None):
-                    transcriptomics_data = OmicsDatasets(
-                        omics_type = "transcriptomics",
+                    transcriptome_data = OmicsDatasets(
+                        omics_type = "transcriptome",
                         omics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
                         owner_email = str(user),
                         is_public = True if request.json['public'] else False
                     )
 
-                metabolomics_data.disease_id = disease.id
-                metabolomics_data.disease = disease
-                db.session.add(metabolomics_data)
-                if( transcriptomics_data is not None):
-                    transcriptomics_data.disease_id = disease.id
-                    transcriptomics_data.disease = disease
-                    db.session.add(transcriptomics_data)
+                metabolite_data.disease_id = disease.id
+                metabolite_data.disease = disease
+                db.session.add(metabolite_data)
+                if( transcriptome_data is not None):
+                    transcriptome_data.disease_id = disease.id
+                    transcriptome_data.disease = disease
+                    db.session.add(transcriptome_data)
                 db.session.commit()
 
 
@@ -168,15 +168,15 @@ def fva_analysis():
 
                 analysis.owner_user_id = user.id
                 analysis.owner_email = user.email
-                if( transcriptomics_data is not None):
-                    analysis.omics_data_id = [metabolomics_data.id, transcriptomics_data.id]
+                if( transcriptome_data is not None):
+                    analysis.omics_data_id = [metabolite_data.id, transcriptome_data.id]
                 else:
-                    analysis.omics_data_id = metabolomics_data.id
+                    analysis.omics_data_id = metabolite_data.id
                 analysis.dataset_id = study.id
 
                 db.session.add(analysis)
                 db.session.commit()
-                save_analysis.delay(analysis.id, value["Metabolites"] if healthy_metab_data is None else X_t, gene_changes=None if healthy_metab_data is None else X_gene_scaled)
+                save_analysis.delay(analysis.id, value["metabolites"] if healthy_metab_data is None else X_t, gene_changes=None if healthy_metab_data is None else X_gene_scaled)
                 analysis_id = analysis.id
 
         return jsonify({'id': analysis_id})
@@ -218,7 +218,7 @@ def fva_analysis_public():
         study = AnalysisMetadata(
             name=request.json['study_name'],
             analysis_method_id=1,
-            diffusion_id=1 if "Transcriptomes" in data else None,
+            diffusion_id=1 if "transcriptomes" in data else None,
             group=request.json["group"],
             disease_id=disease.id,
             disease=disease)
@@ -227,31 +227,31 @@ def fva_analysis_public():
 
     #
         for key, value in data["analysis"].items():  # user as key, value {metaboldata , label}
-            if len(value['Metabolites']) > 0:
+            if len(value['metabolites']) > 0:
                 check_value -=1
 
-                metabolomics_data = OmicsDatasets(
-                    omics_type = "metabolitics",
-                    omics_data= value["Metabolites"],
+                metabolite_data = OmicsDatasets(
+                    omics_type = "metabolite",
+                    omics_data= value["metabolites"],
                     owner_email=request.json["email"],
                     is_public=True
                 )
 
-                trancsriptomics_data = None
-                if( "Transcriptomes" in data and len(data["Transcriptomes"]) > 0):
-                    trancsriptomics_data = OmicsDatasets(
-                        omics_type = "transcriptomics",
-                        omics_data= data["Transcriptomes"],
+                transcriptome_data = None
+                if( "transcriptomes" in data and len(data["transcriptomes"]) > 0):
+                    transcriptome_data = OmicsDatasets(
+                        omics_type = "transcriptome",
+                        omics_data= data["transcriptomes"],
                         owner_email=request.json["email"],
                         is_public=True
                     )
 
-                metabolomics_data.disease_id = disease.id
-                metabolomics_data.disease = disease
-                trancsriptomics_data.disease_id = disease.id
-                trancsriptomics_data.disease = disease
-                db.session.add(metabolomics_data)
-                db.session.add(trancsriptomics_data)
+                metabolite_data.disease_id = disease.id
+                metabolite_data.disease = disease
+                transcriptome_data.disease_id = disease.id
+                transcriptome_data.disease = disease
+                db.session.add(metabolite_data)
+                db.session.add(transcriptome_data)
                 db.session.commit()
 
                 analysis = Analyses(name=key, user=user)
@@ -262,17 +262,17 @@ def fva_analysis_public():
 
                 analysis.owner_user_id = user.id
                 analysis.owner_email = request.json["email"]
-                analysis.omics_data_id = [metabolomics_data.id, trancsriptomics_data.id] if trancsriptomics_data != None else metabolomics_data.id
+                analysis.omics_data_id = [metabolite_data.id, transcriptome_data.id] if transcriptome_data != None else metabolite_data.id
                 analysis.dataset_id = study.id
 
                 db.session.add(analysis)
                 db.session.commit()
 
                 if check_value == counter:
-                    save_analysis.delay(analysis.id, value["Metabolites"],registered=False,mail=request.json["email"],study2=request.json['study_name'])
+                    save_analysis.delay(analysis.id, value["metabolites"],gene_changes=None if healthy_metab_data is None else X_gene_scaled,registered=False,mail=request.json["email"],study2=request.json['study_name'])
                 else:
                     counter+=1
-                    save_analysis.delay(analysis.id, value["Metabolites"])
+                    save_analysis.delay(analysis.id, value["metabolites"],gene_changes=None if healthy_metab_data is None else X_gene_scaled)
 
 
         return jsonify({'id': analysis.id})
@@ -309,7 +309,7 @@ def direct_pathway_mapping():
         study = AnalysisMetadata(
             name=data['study_name'],
             analysis_method_id=2,
-            diffusion_id=1 if "Transcriptomes" in data else None,
+            diffusion_id=1 if "transcriptomes" in data else None,
             status=True,
             group=data["group"],
             disease_id=disease.id,
@@ -320,14 +320,14 @@ def direct_pathway_mapping():
         healthy_metab_data = None
         healthy_gene_data = None
         for key,value in data['analysis'].items():
-            if len(value['Metabolites']) > 0:
+            if len(value['metabolites']) > 0:
                 if value['Label'] == data['group'].lower() + ' label avg':
-                    healthy_metab_data = value['Metabolites']
-                    healthy_gene_data = value.get('Transcriptomes', None)
+                    healthy_metab_data = value['metabolites']
+                    healthy_gene_data = value.get('transcriptomes', None)
 
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
-            current_metabolites = value["Metabolites"]
-            current_genes = value.get('Genes', {})
+            current_metabolites = value["metabolites"]
+            current_genes = value.get('transcriptomes', {})
             if len(current_metabolites) > 0:
                 if healthy_metab_data != None:
                     # 1. Handle zeros for current Metabolites
@@ -355,30 +355,30 @@ def direct_pathway_mapping():
                         # Calculate scaled genes
                         X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
 
-                metabolomics_data = OmicsDatasets(
-                    omics_type = "metabolomics",
-                    omics_data = value["Metabolites"] if healthy_metab_data == None else X_t,
+                metabolite_data = OmicsDatasets(
+                    omics_type = "metabolite",
+                    omics_data = value["metabolites"] if healthy_metab_data == None else X_t,
                     owner_email = str(user),
                     is_public = True if request.json['public'] else False
                 )
 
-                transcriptomics_data = None
+                transcriptome_data = None
 
                 if(X_gene_scaled is not None):
-                    transcriptomics_data = OmicsDatasets(
-                        omics_type = "transcriptomics",
+                    transcriptome_data = OmicsDatasets(
+                        omics_type = "transcriptome",
                         omics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
                         owner_email = str(user),
                         is_public = True if request.json['public'] else False
                     )
 
-                metabolomics_data.disease_id = disease.id
-                metabolomics_data.disease = disease
-                db.session.add(metabolomics_data)
-                if( transcriptomics_data is not None):
-                    transcriptomics_data.disease_id = disease.id
-                    transcriptomics_data.disease = disease
-                    db.session.add(transcriptomics_data)
+                metabolite_data.disease_id = disease.id
+                metabolite_data.disease = disease
+                db.session.add(metabolite_data)
+                if( transcriptome_data is not None):
+                    transcriptome_data.disease_id = disease.id
+                    transcriptome_data.disease = disease
+                    db.session.add(transcriptome_data)
                 db.session.commit()
 
 
@@ -390,15 +390,15 @@ def direct_pathway_mapping():
 
                 analysis.owner_user_id = user.id
                 analysis.owner_email = user.email
-                if( transcriptomics_data is not None):
-                    analysis.omics_data_id = [metabolomics_data.id, transcriptomics_data.id]
+                if( transcriptome_data is not None):
+                    analysis.omics_data_id = [metabolite_data.id, transcriptome_data.id]
                 else:
-                    analysis.omics_data_id = metabolomics_data.id
+                    analysis.omics_data_id = metabolite_data.id
                 analysis.dataset_id = study.id
 
                 db.session.add(analysis)
                 db.session.commit()
-                save_dpm.delay(analysis.id, value["Metabolites"] if healthy_metab_data == None else X_t)
+                save_dpm.delay(analysis.id, value["metabolites"] if healthy_metab_data == None else X_t)
                 analysis_id = analysis.id
 
         return jsonify({'id': analysis_id})
@@ -429,7 +429,7 @@ def direct_pathway_mapping2():
         study = AnalysisMetadata(
             name=data['study_name'],
             analysis_method_id=2,
-            diffusion_id=1 if "Transcriptomes" in data else None,
+            diffusion_id=1 if "transcriptomes" in data else None,
             status=True,
             group=data["group"],
             disease_id=disease.id,
@@ -440,31 +440,31 @@ def direct_pathway_mapping2():
         analysis_id = 0
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
 
-            if len(value['Metabolites']) > 0:
-                metabolomics_data = OmicsDatasets(
-                    omics_type = "metabolitics",
-                    omics_data= value["Metabolites"],
+            if len(value['metabolites']) > 0:
+                metabolite_data = OmicsDatasets(
+                    omics_type = "metabolite",
+                    omics_data= value["metabolites"],
                     owner_email = str(user),
                     is_public = True
                 )
                 print('ok')
                 
-                trancsriptomics_data = None
-                if( "Transcriptomes" in data and len(data["Transcriptomes"]) > 0):
-                    trancsriptomics_data = OmicsDatasets(
-                        omics_type = "transcriptomics",
-                        omics_data=data["Transcriptomes"],
+                transcriptome_data = None
+                if( "transcriptomes" in data and len(data["transcriptomes"]) > 0):
+                    transcriptome_data = OmicsDatasets(
+                        omics_type = "transcriptome",
+                        omics_data=data["transcriptomes"],
                         owner_email=request.json["email"],
                         is_public=True
                     )
 
 
-                metabolomics_data.disease_id = disease.id
-                metabolomics_data.disease = disease
-                trancsriptomics_data.disease_id = disease.id
-                trancsriptomics_data.disease = disease
-                db.session.add(metabolomics_data)
-                db.session.add(trancsriptomics_data)
+                metabolite_data.disease_id = disease.id
+                metabolite_data.disease = disease
+                transcriptome_data.disease_id = disease.id
+                transcriptome_data.disease = disease
+                db.session.add(metabolite_data)
+                db.session.add(transcriptome_data)
                 db.session.commit()
 
                 analysis = Analyses(name =key, user = user)
@@ -477,9 +477,9 @@ def direct_pathway_mapping2():
                 analysis.owner_user_id = user.id
                 analysis.owner_email = request.json["email"]
 
-                analysis.omics_data_id = [metabolomics_data.id, trancsriptomics_data.id] if trancsriptomics_data != None else metabolomics_data.id
+                analysis.omics_data_id = [metabolite_data.id, transcriptome_data.id] if transcriptome_data != None else metabolite_data.id
                 analysis.dataset_id = study.id
-                analysis_runs = DirectPathwayMapping(value["Metabolites"])  # Forming the instance
+                analysis_runs = DirectPathwayMapping(value["metabolites"])  # Forming the instance
                 # fold_changes
                 analysis_runs.run()  # Making the analysis
                 analysis.results_pathway = [analysis_runs.result_pathways]
@@ -525,7 +525,7 @@ def pathway_enrichment():
         study = AnalysisMetadata(
             name=data['study_name'],
             analysis_method_id=3,
-            diffusion_id=1 if "Transcriptomes" in data else None,
+            diffusion_id=1 if "transcriptomes" in data else None,
             status=True,
             group=data["group"],
             disease_id=disease.id,
@@ -536,14 +536,14 @@ def pathway_enrichment():
         healthy_metab_data = None
         healthy_gene_data = None
         for key,value in data['analysis'].items():
-            if len(value['Metabolites']) > 0:
+            if len(value['metabolites']) > 0:
                 if value['Label'] == data['group'].lower() + ' label avg':
-                    healthy_metab_data = value['Metabolites']
-                    healthy_gene_data = value.get('Transcriptomes', None)
+                    healthy_metab_data = value['metabolites']
+                    healthy_gene_data = value.get('transcriptomes', None)
 
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
-            current_metabolites = value["Metabolites"]
-            current_genes = value.get('Genes', {})
+            current_metabolites = value["metabolites"]
+            current_genes = value.get('transcriptomes', {})
             if len(current_metabolites) > 0:
                 if healthy_metab_data != None:
                     # 1. Handle zeros for current Metabolites
@@ -571,30 +571,30 @@ def pathway_enrichment():
                         # Calculate scaled genes
                         X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
 
-                metabolomics_data = OmicsDatasets(
-                    omics_type = "metabolomics",
-                    omics_data = value["Metabolites"] if healthy_metab_data == None else X_t,
+                metabolite_data = OmicsDatasets(
+                    omics_type = "metabolite",
+                    omics_data = value["metabolites"] if healthy_metab_data == None else X_t,
                     owner_email = str(user),
                     is_public = True if request.json['public'] else False
                 )
 
-                transcriptomics_data = None
+                transcriptome_data = None
 
                 if(X_gene_scaled is not None):
-                    transcriptomics_data = OmicsDatasets(
-                        omics_type = "transcriptomics",
+                    transcriptome_data = OmicsDatasets(
+                        omics_type = "transcriptome",
                         omics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
                         owner_email = str(user),
                         is_public = True if request.json['public'] else False
                     )
 
-                metabolomics_data.disease_id = disease.id
-                metabolomics_data.disease = disease
-                db.session.add(metabolomics_data)
-                if( transcriptomics_data is not None):
-                    transcriptomics_data.disease_id = disease.id
-                    transcriptomics_data.disease = disease
-                    db.session.add(transcriptomics_data)
+                metabolite_data.disease_id = disease.id
+                metabolite_data.disease = disease
+                db.session.add(metabolite_data)
+                if( transcriptome_data is not None):
+                    transcriptome_data.disease_id = disease.id
+                    transcriptome_data.disease = disease
+                    db.session.add(transcriptome_data)
                 db.session.commit()
 
 
@@ -606,15 +606,15 @@ def pathway_enrichment():
 
                 analysis.owner_user_id = user.id
                 analysis.owner_email = user.email
-                if( transcriptomics_data is not None):
-                    analysis.omics_data_id = [metabolomics_data.id, transcriptomics_data.id]
+                if( transcriptome_data is not None):
+                    analysis.omics_data_id = [metabolite_data.id, transcriptome_data.id]
                 else:
-                    analysis.omics_data_id = metabolomics_data.id
+                    analysis.omics_data_id = metabolite_data.id
                 analysis.dataset_id = study.id
 
                 db.session.add(analysis)
                 db.session.commit()
-                save_pe.delay(analysis.id, value["Metabolites"] if healthy_metab_data == None else X_t)                
+                save_pe.delay(analysis.id, value["metabolites"] if healthy_metab_data == None else X_t)                
                 analysis_id = analysis.id
 
         return jsonify({'id': analysis_id})
@@ -645,7 +645,7 @@ def pathway_enrichment2():
         study = AnalysisMetadata(
             name=data['study_name'],
             analysis_method_id=3,
-            diffusion_id=1 if "Transcriptomes" in data else None,
+            diffusion_id=1 if "transcriptomes" in data else None,
             status=True,
             group=data["group"],
             disease_id=disease.id,
@@ -656,31 +656,31 @@ def pathway_enrichment2():
         analysis_id = 0
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
 
-            if len(value['Metabolites']) > 0:
-                metabolomics_data = OmicsDatasets(
-                    omics_type = "metabolitics",
-                    omics_data = value["Metabolites"],
+            if len(value['metabolites']) > 0:
+                metabolite_data = OmicsDatasets(
+                    omics_type = "metabolite",
+                    omics_data = value["metabolites"],
                     owner_email = str(user),
                     is_public = True
                 )
                 print('ok')
 
-                trancsriptomics_data = None
-                if( "Transcriptomes" in data and len(data["Transcriptomes"]) > 0):
-                    trancsriptomics_data = OmicsDatasets(
-                        omics_type = "transcriptomics",
-                        omics_data=data["Transcriptomes"],
+                transcriptome_data = None
+                if( "transcriptomes" in data and len(data["transcriptomes"]) > 0):
+                    transcriptome_data = OmicsDatasets(
+                        omics_type = "transcriptome",
+                        omics_data=data["transcriptomes"],
                         owner_email=request.json["email"],
                         is_public=True
                     )
 
 
-                metabolomics_data.disease_id = disease.id
-                metabolomics_data.disease = disease
-                trancsriptomics_data.disease_id = disease.id
-                trancsriptomics_data.disease = disease
-                db.session.add(metabolomics_data)
-                db.session.add(trancsriptomics_data)
+                metabolite_data.disease_id = disease.id
+                metabolite_data.disease = disease
+                transcriptome_data.disease_id = disease.id
+                transcriptome_data.disease = disease
+                db.session.add(metabolite_data)
+                db.session.add(transcriptome_data)
                 db.session.commit()
 
                 analysis = Analyses(name =key, user = user)
@@ -693,9 +693,9 @@ def pathway_enrichment2():
                 analysis.owner_user_id = user.id
                 analysis.owner_email = request.json["email"]
 
-                analysis.omics_data_id = [metabolomics_data.id, trancsriptomics_data.id] if trancsriptomics_data != None else metabolomics_data.id
+                analysis.omics_data_id = [metabolite_data.id, transcriptome_data.id] if transcriptome_data != None else metabolite_data.id
                 analysis.dataset_id = study.id
-                analysis_runs = PathwayEnrichment(value["Metabolites"])  # Forming the instance
+                analysis_runs = PathwayEnrichment(value["metabolites"])  # Forming the instance
                 # fold_changes
                 analysis_runs.run()  # Making the analysis
                 analysis.results_pathway = [analysis_runs.result_pathways]
@@ -861,6 +861,7 @@ def disease_prediction(id: int):
                 print(e)
     return jsonify(sorted(preds, key=lambda p: p['pred_score'], reverse=True))
 
+## TODO handle frontend for diffusion_method!
 @app.route('/analysis/<type>')
 def analysis_details(type):
     data = AnalysisMetadata.query.all()
@@ -912,6 +913,7 @@ def analysis_details(type):
     # print(returned_data)
     return jsonify(returned_data)
 
+## TODO handle frontend for diffusion_method!
 @app.route('/analysis/list')
 @jwt_required()
 def user_analysis():
@@ -978,26 +980,35 @@ def user_analysis():
 
     return jsonify(returned_data)
 
-#TODO
 @app.route('/analysis/detail/<id>')
 def analysis_detail(id):
     analysis = Analyses.query.get(id)
-    metabolomics_data = OmicsDatasets.query.get(analysis.omics_data_id)
+    # omics_data_id is always an array (can have one or multiple IDs)
+    # Find metabolite data from the array by checking omics_type
+    metabolite_data = None
+    for omics_id in analysis.omics_data_id:
+        omics_dataset = OmicsDatasets.query.get(omics_id)
+        if omics_dataset and omics_dataset.omics_type == "metabolite":
+            metabolite_data = omics_dataset
+            break
     study = AnalysisMetadata.query.get(analysis.dataset_id)
     group = study.group
     method = AnalysisMethod.query.get(study.analysis_method_id)
+    diffusionMethod = DiffusionMethod.query.get(study.diffusion_id) if study.diffusion_id else None
     disease = Diseases.query.get(study.disease_id)
     data = {
         'case_name': analysis.name,
         'status': study.status,
         'results_pathway': analysis.results_pathway,
         'results_reaction': analysis.results_reaction,
-        'method': method.name,
-        'fold_changes': metabolomics_data.metabolomics_data,
+        'analysis_method': method.name,
+        'fold_changes': metabolite_data.metabolite_data,
         'study_name': study.name,
         'analyses': [],
         'disease': disease.name
     }
+    if diffusionMethod and diffusionMethod.name:
+        data['diffusion_method'] = diffusionMethod.name
     analyses = Analyses.query.filter_by(dataset_id=study.id)
     for analysis in analyses:
         if analysis.label == str(group).lower() + ' label avg':
@@ -1067,7 +1078,7 @@ def get_diseases():
     return jsonify(returned_data)
 
 ############################################################# deployed but new
-##TODO
+
 @app.route('/analysis/search-by-metabol', methods=['POST'])
 def search_analysis_by_metabol():
     """
@@ -1096,7 +1107,7 @@ def search_analysis_by_metabol():
     ids = db.session.query(OmicsDatasets.id).all()
     for i in ids:  # loop over the Ids
         data = OmicsDatasets.query.filter_by(id=i[0]).first();
-        if data.omics_type != "metabolitics":
+        if data.omics_type != "metabolite":
             continue
         metabolites_data = data.omics_data
         if metabolite_name in list(metabolites_data) :
@@ -1133,8 +1144,8 @@ def checkMapped(data):
     output['study_name'] = data['study_name']
     if 'email' in data.keys():
         output['email'] = data['email']
-    if 'Transcriptomes' in data.keys():
-        output['Transcriptomes'] = data['Transcriptomes']
+    if 'transcriptomes' in data.keys():
+        output['transcriptomes'] = data['transcriptomes']
 
     output.setdefault('analysis', {})
 
@@ -1143,16 +1154,16 @@ def checkMapped(data):
         isMapped = data['isMapped']
         for case in data['analysis'].keys():
             temp = {}
-            metabolites = data['analysis'][case]['Metabolites']
+            metabolites = data['analysis'][case]['metabolites']
             label = data['analysis'][case]['Label']
             temp['Label'] = label
-            temp.setdefault('Metabolites', {})
+            temp.setdefault('metabolites', {})
 
             for i in metabolites.keys():
                 if i in isMapped and isMapped[i]['isMapped'] is True:
-                    temp['Metabolites'][i] = metabolites[i]
-            # print(len(temp['Metabolites']))
-            if len(temp['Metabolites']) > 0:
+                    temp['metabolites'][i] = metabolites[i]
+            # print(len(temp['metabolites']))
+            if len(temp['metabolites']) > 0:
                 output['analysis'][case] = temp
 
     # {'public': True, 'analysis': {'NIDDK1': {'Label': 'not_provided', 'Metabolites': {}}},
@@ -1177,26 +1188,26 @@ def checkMapped(data):
 
         for case in data['analysis'].keys():
             temp = {}
-            metabolites = data['analysis'][case]['Metabolites']
+            metabolites = data['analysis'][case]['metabolites']
             label = data['analysis'][case]['Label']
             temp['Label'] = label
-            temp.setdefault('Metabolites', {})
+            temp.setdefault('metabolites', {})
 
             for i in metabolites.keys():
 
                 if i in mapping_data2.keys():
                     print(type(metabolites[i]))
-                    temp['Metabolites'][mapping_data2[i]] = float(str(metabolites[i]).strip())
+                    temp['metabolites'][mapping_data2[i]] = float(str(metabolites[i]).strip())
 
                 if i in mapping_data1.keys():
                     if metabolites[i] != '':
                         print(type(metabolites[i]))
-                        temp['Metabolites'][i] = float(str(metabolites[i]).strip())
+                        temp['metabolites'][i] = float(str(metabolites[i]).strip())
 
                 # elif i in mapping_metabolites.keys():
-                #     temp['Metabolites'][mapping_metabolites[i]] = metabolites[i]
+                #     temp['metabolites'][mapping_metabolites[i]] = metabolites[i]
 
-            if len(temp['Metabolites']) > 0:
+            if len(temp['metabolites']) > 0:
                 output['analysis'][case] = temp
         print(output)
         return output
