@@ -870,7 +870,7 @@ def analysis_details(type):
         analyses = Analyses.query.filter_by(type='public', dataset_id=item.id).with_entities(
             Analyses.id, Analyses.name, Analyses.dataset_id, Analyses.start_time, Analyses.end_time)
         analysisMethod = AnalysisMethod.query.get(item.analysis_method_id)
-        diffusionMethod = DiffusionMethod.query.get(item.diffusion_id)
+        diffusionMethod = DiffusionMethod.query.get(item.diffusion_id) if item.diffusion_id else None
         disease = Diseases.query.get(item.disease_id)
         group = item.group
         if len(list(analyses)) > 0:
@@ -903,13 +903,14 @@ def analysis_details(type):
                 'name': item.name,
                 'analyses': analysis_data,
                 'analysis_method': analysisMethod.name,
-                'diffusion_method': diffusionMethod.name,
                 'disease': disease.name,
                 'start': start,
                 'end': end,
                 'avg_id': analysis_data[0]['id'] if avg_id == -1 else avg_id,
                 'progress': round(len(ends) / len(analysis_data) * 100) 
             })
+            if diffusionMethod and diffusionMethod.name:
+                returned_data[-1]['diffusion_method'] = diffusionMethod.name
     # print(returned_data)
     return jsonify(returned_data)
 
@@ -937,7 +938,7 @@ def user_analysis():
             analyses = Analyses.query.filter_by(owner_user_id=current_identity.id, type='private', dataset_id=item.id).with_entities(
             Analyses.id, Analyses.name, Analyses.dataset_id, Analyses.start_time, Analyses.end_time)
             analysisMethod = AnalysisMethod.query.get(item.analysis_method_id)
-            diffusionMethod = DiffusionMethod.query.get(item.diffusion_id)
+            diffusionMethod = DiffusionMethod.query.get(item.diffusion_id) if item.diffusion_id else None
             disease = Diseases.query.get(item.disease_id)
             group = item.group
             if len(list(analyses)) > 0:
@@ -970,13 +971,14 @@ def user_analysis():
                     'name': item.name,
                     'analyses': analysis_data,
                     'analysis_method': analysisMethod.name,
-                    "diffusion_method": diffusionMethod.name,
                     'disease': disease.name,
                     'start': start,
                     'end': end,
                     'avg_id': analysis_data[0]['id'] if avg_id == -1 else avg_id,
                     'progress': round(len(ends) / len(analysis_data) * 100) 
                 })
+                if diffusionMethod and diffusionMethod.name:
+                    returned_data[-1]['diffusion_method'] = diffusionMethod.name
 
     return jsonify(returned_data)
 
