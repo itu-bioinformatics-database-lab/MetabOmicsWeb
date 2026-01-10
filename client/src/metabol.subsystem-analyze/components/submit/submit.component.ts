@@ -137,8 +137,8 @@ export class SubmitComponent implements OnInit {
             "public": this.isPublic.value,
             "analysis": { 
               [name]: { 
-              "Metabolites": _.fromPairs(this.metabolitesTable), 
-              "Transcriptomes": _.fromPairs(this.transcriptomesTable),
+              "metabolites": _.fromPairs(this.metabolitesTable), 
+              "transcriptomes": _.fromPairs(this.transcriptomesTable),
               "Label": "not_provided" } },
             "group": "not_provided",
             "disease": this.myControl.value["id"]
@@ -152,8 +152,8 @@ export class SubmitComponent implements OnInit {
             "public": this.isPublic.value,
             "analysis": { 
               [name]: { 
-              "Metabolites": _.fromPairs(this.metabolitesTable), 
-              "Transcriptomes": _.fromPairs(this.transcriptomesTable),
+              "metabolites": _.fromPairs(this.metabolitesTable), 
+              "transcriptomes": _.fromPairs(this.transcriptomesTable),
               "Label": "not_provided" } },
             "group": "not_provided",
             "disease": this.myControl.value["id"],

@@ -1060,7 +1060,7 @@ def search_analysis_by_change():
         study = AnalysisMetadata.query.get(item)
         method = AnalysisMethod.query.get(study.analysis_method_id)
         for (id, name) in temp_data[item]:
-            returned_data[c] = {'anlysisId':study.id, 'name': study.name, 'case': id ,"method":method.name}
+            returned_data[c] = {'anlysisId':study.id, 'name': study.name, 'case': id ,"analysis_method":method.name}
         c+=1
 
     return returned_data
@@ -1112,7 +1112,9 @@ def search_analysis_by_metabol():
         metabolites_data = data.omics_data
         if metabolite_name in list(metabolites_data) :
             analysis = Analyses.query.filter_by(omics_data_id=i[0]).first();
-            temp = {"anlysisId":analysis.dataset.id,'study':analysis.dataset.name,"method":analysis.dataset.method.name,'case':analysis.omics_data_id,'name':metabolite_name}
+            study = AnalysisMetadata.query.get(analysis.dataset_id)
+            method = AnalysisMethod.query.get(study.analysis_method_id)
+            temp = {"anlysisId":analysis.dataset.id,'study':analysis.dataset.name,"analysis_method":method.name,'case':analysis.omics_data_id,'name':metabolite_name}
             filtered_ids[c] = temp
             c+=1
     # print(filtered_ids)

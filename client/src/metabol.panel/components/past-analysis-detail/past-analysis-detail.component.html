@@ -64,7 +64,11 @@
         <tbody>
           <tr>
             <td>Method:</td>
-            <td style="text-transform: capitalize;">{{data?.method}}</td>
+            <td style="text-transform: capitalize;">{{data?.analysis_method}}</td>
+          </tr>
+          <tr>
+            <td>Diffusion Method:</td>
+            <td style="text-transform: capitalize;">{{data?.diffusion_method || 'No diffusion method is used in this analysis'}}</td>
           </tr>
           <tr>
             <td>Disease:</td>
@@ -85,16 +89,16 @@
     </div>
     <div *ngIf="data?.results_pathway">
       <div>
-        <pathway-histogram [pathwayScores]="data.results_pathway" [method]="data?.method"></pathway-histogram>
+        <pathway-histogram [pathwayScores]="data.results_pathway" [method]="data?.analysis_method"></pathway-histogram>
       </div>
       <div>
         <similar-diseases [id]="id"></similar-diseases>
       </div>
       <div>
-        <disease-prediction [id]="id" [method]="data?.method"></disease-prediction>
+        <disease-prediction [id]="id" [method]="data?.analysis_method"></disease-prediction>
       </div>
       <div>
-        <result-table [data]="[data]" [method]="data?.method"></result-table>
+        <result-table [data]="[data]" [method]="data?.analysis_method"></result-table>
       </div>
     </div>    
 </div>

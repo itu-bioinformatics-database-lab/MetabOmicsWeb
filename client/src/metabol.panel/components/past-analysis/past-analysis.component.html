@@ -29,6 +29,7 @@
 								<tr>
 									<th>Name</th>
 									<th>Method</th>
+									<th>Diffusion Method</th>
 									<th>Disease</th>
 									<th>Start</th>
 									<th>End</th>
@@ -37,7 +38,8 @@
 							<tbody>
 								<tr *ngFor="let i of data[type] | orderBy:'name'">
 									<td><input type="checkbox" [formControlName]="i.avg_id" style="margin-right: 2px;" /><a [routerLink]="['/panel/past-analysis', i.avg_id]">{{i.name}} ({{i.analyses.length}} samples)</a></td>
-									<td>{{i.method}}</td>
+									<td>{{i.analysis_method}}</td>
+									<td>{{i.diffusion_method || 'No diffusion method is used in this analysis'}}</td>
 									<td style="text-transform: capitalize;">{{i.disease}}</td>
 									<td *ngIf="i.start">{{i.start}}</td>
 									<td *ngIf="!i.start">Analysis in queue...</td>
