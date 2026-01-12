@@ -288,7 +288,7 @@ export class UploadService implements OnDestroy {
         this.loader.get('Recon3D', (recon) => {
           for (let line of lines) {
             const splitted = line.split(',');
-            const originalName = splitted[0];
+            const originalName = splitted[0].trim().replace(/^"|"$/g, ''); 
             if (originalName !== '' && originalName !== null) {
               const value = splitted[1];
               if (recon.metabolites[originalName]) {
