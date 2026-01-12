@@ -4,7 +4,8 @@ import json
 
 from sqlalchemy import and_, or_
 from sqlalchemy.types import Float
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSON, ARRAY
+from sqlalchemy.ext.mutable import MutableList
 from flask_sqlalchemy import SQLAlchemy, BaseQuery
 from flask_jwt import jwt_required, current_identity, _jwt_required
 
@@ -96,8 +97,8 @@ class Analyses(db.Model):
     owner_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     user = db.relationship("User")
     owner_email = db.Column(db.String(255))
-    omics_data_id = db.Column(db.Integer, db.ForeignKey('omicsdatasets.id'))
-    omics_data = db.relationship('OmicsDatasets')
+    omics_data_id = db.Column(MutableList.as_mutable(ARRAY(db.Integer)))
+    # omics_data = db.relationship('OmicsDatasets')
     # method_id = db.Column(db.Integer, db.ForeignKey('methods.id'))
     # method = db.relationship('Method')
     dataset_id = db.Column(db.Integer, db.ForeignKey('analysismetadata.id'))

@@ -23,9 +23,9 @@ class BaseConfig:
     JWT_EXPIRATION_DELTA = datetime.timedelta(days=25)
 
     CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL',
-                                  'redis://localhost:6379')
+                                  'redis://redis:6379')
     CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND',
-                                      'redis://localhost:6379')
+                                      'redis://redis:6379')
     CELERYBEAT_SCHEDULE = {
         'train_save_model': {
             'task': 'train_save_model',
