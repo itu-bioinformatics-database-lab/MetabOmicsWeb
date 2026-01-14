@@ -26,7 +26,7 @@
       <div class="form-group">
         <label class="control-label">Excel Format:</label>
         <div class="input-group">
-          <input type="file" class="form-control" (change)="uploadService.incomingfile($event, { value: loading })" accept=".xlsx">
+          <input type="file" class="form-control" (change)="uploadService.incomingfile($event, { value: loading }, 'Metabolomics')" accept=".xlsx">
           <span class="file-info">Upload metabolite concentration data in Excel format</span>
         </div>
       </div>
@@ -41,7 +41,7 @@
     </div>
   </div>
 
-  <div *ngIf="loading" class="loading-overlay">
+  <div *ngIf="uploadService.isLoading" class="loading-overlay">
     <div class="spinner"></div>
     <p>Processing your data...</p>
   </div>

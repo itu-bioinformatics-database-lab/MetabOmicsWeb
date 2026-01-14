@@ -24,19 +24,29 @@ import requests
 @app.route('/excel', methods =['GET','POST'])
 def excel():
     data = request.json['data']
+    omics_type = request.json.get('omicsType', 'Metabolomics') # Default to Metabolomics
+    
     metabolites = []
     for d in data:
         if d != [] and d[0] != None:
             metabolites.append(d[0])
-    enhance_synonyms(metabolites)
+            
+    if omics_type == 'Metabolomics':
+        enhance_synonyms(metabolites)
+        
     meta = request.json['meta']
-    processed_data = excel_data_Prpcessing(data,meta)
-    new_data = group_avg(processed_data)
+    processed_data = excel_data_Prpcessing(data, meta, omics_type)
+    new_data = group_avg(processed_data, omics_type=omics_type)
     for k,v in new_data.items():
         processed_data['analysis'][k] = v
     # processed_data['analysis']
     #print (processed_data)
-    processed_data['metabolites'] = metabolites
+    
+    if omics_type == 'Transcriptomics':
+        processed_data['transcriptomes'] = metabolites
+    else:
+        processed_data['metabolites'] = metabolites
+        
     return jsonify(processed_data)
 
 def enhance_synonyms(metabolites):
@@ -66,7 +76,7 @@ def enhance_synonyms(metabolites):
     with open('../datasets/assets/new-synonym-mapping.json', 'w') as f:
         json.dump(synonyms, f, indent=4)
 
-def metabolc(data):
+def metabolc(data, omics_type='Metabolomics'):
     """
     this function takes data from excel sheet and return a list of metabolites in the sheet
     """
@@ -75,48 +85,91 @@ def metabolc(data):
     mapping_metabolites = {}
     isMapped = {}
 
-    # mapping_data = open("../datasets/assets/mapping_all.txt", "r+").readlines()
-    # for line in mapping_data:
-    #     tempo = line.split(",")
-    #     mapping_metabolites[tempo[0].strip()] = tempo[1].strip()
-    #
-    with open('../datasets/assets/recon3D.json') as f:
-        mapping_data1= json.load(f)
-        mapping_data1 = mapping_data1["metabolites"]
+    mapping_data1 = {}
+    mapping_data2 = {}
 
-    with open('../datasets/assets/new-synonym-mapping.json') as f:
-        mapping_data2= json.load(f)
+    if omics_type == 'Metabolomics':
+        with open('../datasets/assets/recon3D.json') as f:
+            mapping_data1= json.load(f)
+            mapping_data1 = mapping_data1["metabolites"]
 
-
-
+        with open('../datasets/assets/new-synonym-mapping.json') as f:
+            mapping_data2= json.load(f)
+    
+    elif omics_type == 'Transcriptomics':
+        with open('../datasets/assets/universalGraph_new.json') as f:
+            mapping_data1 = json.load(f)
+            mapping_data1 = mapping_data1["vertices"]
+            
+        with open('../datasets/assets/uniprot_synonym_mapping.json') as f:
+            mapping_data2 = json.load(f)
 
     for k in range(1, len(data), 1):
         if len(data[k]) > 0:
+            original_name = str(data[k][0]).strip()
+            
+            if omics_type == 'Metabolomics':
+                if original_name in mapping_data1.keys():
+                    metabols.append(original_name)
+                    isMapped[original_name] = {'isMapped':True}
+                    metabols2[original_name] = original_name
 
-            if data[k][0] in mapping_data1.keys():
-                metabols.append(data[k][0])
-                isMapped[data[k][0]] = {'isMapped':True}
-                metabols2[data[k][0]] = data[k][0]
-
-            elif data[k][0] in mapping_data2.keys():
-                temp = mapping_data2[data[k][0]]
-                temp = temp[0] if type(temp) is list else temp
-                metabols.append(temp)
-                isMapped[temp] = {'isMapped': True}
-                metabols2[temp] = data[k][0]
-
-            # elif data[k][0] in mapping_metabolites.keys():
-            #     metabols.append(mapping_metabolites[data[k][0]])
-            #     isMapped[mapping_metabolites[data[k][0]]] = {'isMapped': True}
-
-            else:
-                temp = data[k][0]
-                temp = temp[0] if type(temp) is list else temp
-                metabols.append(temp)
-                isMapped[temp] = {'isMapped':False}
-                metabols2[temp] = data[k][0]
-
-
+                elif original_name in mapping_data2.keys():
+                    temp = mapping_data2[original_name]
+                    temp = temp[0] if type(temp) is list else temp
+                    metabols.append(temp)
+                    isMapped[temp] = {'isMapped': True}
+                    metabols2[temp] = original_name
+                else:
+                    temp = original_name
+                    temp = temp[0] if type(temp) is list else temp
+                    metabols.append(temp)
+                    isMapped[temp] = {'isMapped':False}
+                    metabols2[temp] = original_name
+                    
+            elif omics_type == 'Transcriptomics':
+                # Check directly in universal graph
+                if original_name in mapping_data1.keys():
+                    # For graph, we might want the label? using original name as ID if found
+                    node = mapping_data1[original_name]
+                    mapped_name = node.get('label', original_name) + ' - (' + original_name + ')'
+                    metabols.append(mapped_name)
+                    isMapped[mapped_name] = {'isMapped': True}
+                    metabols2[mapped_name] = original_name
+                    
+                # Check synonyms (Uniprot)
+                elif original_name in mapping_data2.keys():
+                    uniprots = mapping_data2[original_name]
+                    matched = False
+                    mapped_name_final = original_name
+                    
+                    for uniprot_id in uniprots:
+                        transcript_id = uniprot_id + '_transcript'
+                        transcript_id_x = transcript_id + '_x'
+                        
+                        if transcript_id in mapping_data1:
+                           node = mapping_data1[transcript_id]
+                           mapped_name_final = node.get('label', transcript_id) + ' - (' + transcript_id + ')'
+                           matched = True
+                           break
+                        elif transcript_id_x in mapping_data1:
+                           node = mapping_data1[transcript_id_x]
+                           mapped_name_final = node.get('label', transcript_id_x) + ' - (' + transcript_id_x + ')'
+                           matched = True
+                           break
+                    
+                    if matched:
+                        metabols.append(mapped_name_final)
+                        isMapped[mapped_name_final] = {'isMapped': True}
+                        metabols2[mapped_name_final] = original_name
+                    else:
+                        metabols.append(original_name)
+                        isMapped[original_name] = {'isMapped': False}
+                        metabols2[original_name] = original_name
+                else:
+                    metabols.append(original_name)
+                    isMapped[original_name] = {'isMapped': False}
+                    metabols2[original_name] = original_name
 
     return [metabols,isMapped,metabols2]
 
@@ -155,7 +208,7 @@ def user_metabol(data):
     return user_metabolites
 
 
-def excel_data_Prpcessing(data, meta):
+def excel_data_Prpcessing(data, meta, omics_type='Metabolomics'):
 
     """
     returns a dictionary for a study with its users info, metabolites and labels {studyname, control_label, analysis:{user:{metabolites,label}}}
@@ -170,7 +223,7 @@ def excel_data_Prpcessing(data, meta):
 
     users_metabolite = {}
     data2 = user_metabol(data)
-    metabol,isMapped,metabol2 = metabolc(data)
+    metabol,isMapped,metabol2 = metabolc(data, omics_type)
 
     for key, value in data2.items():
         temp = {}
@@ -178,7 +231,10 @@ def excel_data_Prpcessing(data, meta):
             if value[index_metas] != None:
                 temp[metabol[index_metas]] =  value[index_metas]
 
-        users_metabolite[key] = {"Metabolites": temp, "Label": users_labels[key]}
+        if omics_type == 'Transcriptomics':
+             users_metabolite[key] = {"transcriptomes": temp, "Label": users_labels[key]}
+        else:
+             users_metabolite[key] = {"Metabolites": temp, "Label": users_labels[key]}
     #
     processed_users_data = {"study_name": study_name, "group": group_control_label,
                             "analysis": users_metabolite,'isMapped':isMapped, 'metabol':metabol2}
@@ -200,12 +256,9 @@ def meta_data_processing(meta):
 
     return [study_name, group_control_label, users_labels]
 
-
-
 ################################################### MWtab codes below
 
 def mwtabReader(name):
-
     dicte = {}
     liste = []
     subjects_samples = 0
@@ -233,9 +286,6 @@ def mwtabReader(name):
 
     return [dicte,study_title]
 
-
-
-
 def checkDatabases(name):  # check if our used databases are used.
     mw = next(mwtab.read_files(name[0],name[1]))
     database = []
@@ -247,6 +297,7 @@ def checkDatabases(name):  # check if our used databases are used.
         # else:
         #     print (i)
     return database
+
 def databaseProccesing(name):
 
     """
@@ -281,7 +332,6 @@ def databaseProccesing(name):
             return  mapped_final
     else:
         return 0
-
 
 @app.route('/workbench', methods =['GET','POST'])
 def mwlab_mapper():
@@ -363,11 +413,7 @@ def mwlab_mapper():
         return ({1:"Error"})
     # return jsonify({1:1})
 
-
-
-
-
-def group_avg(sample_data3,checker=1):
+def group_avg(sample_data3, checker=1, omics_type='Metabolomics'):
 
     """ a function to find group and labels averages for a given study
     inputs:
@@ -376,6 +422,8 @@ def group_avg(sample_data3,checker=1):
     - foldChanges from db
 
     """
+    
+    data_key = 'transcriptomes' if omics_type == 'Transcriptomics' else 'Metabolites'
 
 
     labels = {}
@@ -384,19 +432,20 @@ def group_avg(sample_data3,checker=1):
 
 
     for k,v in sample_data3["analysis"].items():
-        for metabol in v['Metabolites']:
-            if metabol not in list(labels.keys()):
-                labels.setdefault(metabol,[])
-                labels[metabol].append( v['Metabolites'][metabol])
+        if data_key in v:
+            for metabol in v[data_key]:
+                if metabol not in list(labels.keys()):
+                    labels.setdefault(metabol,[])
+                    labels[metabol].append( v[data_key][metabol])
+                else:
+                    labels[metabol].append( v[data_key][metabol])
+
+
+            if v["Label"].lower() not in labels_case:
+                labels_case.setdefault(v["Label"].lower(),[])
+                labels_case[v["Label"].lower()].append(v[data_key])
             else:
-                labels[metabol].append( v['Metabolites'][metabol])
-
-
-        if v["Label"].lower() not in labels_case:
-            labels_case.setdefault(v["Label"].lower(),[])
-            labels_case[v["Label"].lower()].append(v['Metabolites'])
-        else:
-            labels_case[v["Label"].lower()].append(v['Metabolites'])
+                labels_case[v["Label"].lower()].append(v[data_key])
 
 
     if len(list(labels_case.keys())) > 1:
@@ -417,26 +466,17 @@ def group_avg(sample_data3,checker=1):
 
             final.append([str(key)+" label avg",label_cases_avg])
 
-
-
-
-
     #final.append(["Group Avg",labels])
-    final_combined = average(final)
+    final_combined = average(final, data_key)
     return final_combined
 
-
-
-
-
-
-def average(list_of_dicte):
+def average(list_of_dicte, data_key='Metabolites'):
     final = {}
     for case in list_of_dicte:
         result = {}
         for k,v in case[1].items():
             avg = sum(v)/len(v)
             result[k] = avg
-        final[case[0]] ={"Label":case[0],"Metabolites":result}
+        final[case[0]] ={"Label":case[0], data_key :result}
 
     return final

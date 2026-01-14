@@ -56,6 +56,17 @@
 
 <!-- ################# table below  -->
 
+<div class="row" style="margin-bottom: 20px; padding: 0 10px;">
+  <ul class="nav nav-tabs">
+    <li [class.active]="activeTab === 'Metabolomics'" style="cursor: pointer;">
+      <a (click)="setActiveTab('Metabolomics')">Metabolomics Data</a>
+    </li>
+    <li [class.active]="activeTab === 'Transcriptomics'" style="cursor: pointer;" *ngIf="usersDataTranscriptomics">
+      <a (click)="setActiveTab('Transcriptomics')">Transcriptomics Data</a>
+    </li>
+  </ul>
+</div>
+
 
 
 
@@ -67,15 +78,19 @@
     <div id="chart"></div>
   </div>
   <div class="col-md-6">
-    <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;">
+    <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;" *ngIf="activeTab === 'Metabolomics'">
       <p>Number of Mapped Metabolites: {{usersData3.length - unmappedMetabolites.length}}</p>
       <p>Number of Unmapped Metabolites: {{unmappedMetabolites.length}}</p>
+    </blockquote>
+    <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;" *ngIf="activeTab === 'Transcriptomics'">
+      <p>Number of Mapped Genes: {{transcriptomicsFormatted.length - unmappedTranscriptomics.length}}</p>
+      <p>Number of Unmapped Genes: {{unmappedTranscriptomics.length}}</p>
     </blockquote>
   </div>
   
 </div>
 
-<div class="row">
+<div class="row" *ngIf="activeTab === 'Metabolomics'">
   <table class="table">
     <thead>
       <tr>
@@ -103,6 +118,41 @@
         <tr *ngFor="let r of usersData3;let i=index">
           <ng-container *ngIf="r.includes('- (-)')"><td *ngFor="let met of r" style="background-color: yellow;">{{met}}</td></ng-container>
           <ng-container *ngIf="!r.includes('- (-)')"><td *ngFor="let met of r">{{met}}</td></ng-container>
+        </tr>
+      </tbody>
+  
+  
+  </table>
+</div>
+
+<div class="row" *ngIf="activeTab === 'Transcriptomics'">
+  <table class="table">
+    <thead>
+      <tr>
+          <th>Cases</th>
+          <th></th>
+          <td *ngFor="let name of casesTranscriptomics">{{name}}</td>
+      </tr>
+      
+    </thead>
+  
+    <tbody>
+      <tr>
+        <th>Label</th>
+        <th></th>
+        <td *ngFor="let label of labelsTranscriptomics">{{label}}</td>
+      </tr>
+      <tr> 
+        <th>Genes</th>
+        <th>Universal Graph</th>
+      </tr>
+      </tbody>
+  
+  
+      <tbody>
+        <tr *ngFor="let r of transcriptomicsFormatted;let i=index">
+          <ng-container *ngIf="r.includes('- (-)')"><td *ngFor="let gene of r" style="background-color: yellow;">{{gene}}</td></ng-container>
+          <ng-container *ngIf="!r.includes('- (-)')"><td *ngFor="let gene of r">{{gene}}</td></ng-container>
         </tr>
       </tbody>
   

@@ -54,7 +54,7 @@ export class SubmitComponent implements OnInit {
   comboboxMethods: Array<object> = [
     { id: 0, name: "Metabolitics" },
     { id: 1, name: "Direct Pathway Mapping" },
-    { id: 2, name: "Pathway Enrichment"},
+    { id: 2, name: "Pathway Enrichment" },
   ];
   methods = {
     Metabolitics: 0,
@@ -63,7 +63,7 @@ export class SubmitComponent implements OnInit {
   };
 
   comboboxDiffusion: Array<object> = [
-    { id: 0, name: "Linear Threshold"}
+    { id: 0, name: "Linear Threshold" }
   ];
 
   diffusionss = {
@@ -95,178 +95,182 @@ export class SubmitComponent implements OnInit {
         map(value => typeof value === 'string' ? value : (value.name + value.synonym)),
         map(name => name ? this._filter(name) : this.diseases.slice())
       );
-      this.omicsService.selectedOmics$.subscribe(_ => {
-        this.omicsArray = this.omicsService.getSelectedOmicsArray();
-      });
-  
-      // Initialize tab index from service
-      this.selectedTabIndex = this.omicsService.getCurrentOmicsIndex();
-    }
-  
-    analyze() {
-      const selectedMethod = this.selectedMethod;
-      if(!this.myControl.value){
-        alert("Please choose a disease on the top of the page to start analysis.");
-        return;
-      }
-  
-      this.mConTable.forEach(metabolite => {
-         if (metabolite[4]) {
-           this.metabolitesTable.push([metabolite[2], metabolite[1]]);
-         }
-      });
-      if(this.hasTranscriptomicsSelected()){
-        this.tConTable.forEach(transcript => {
-          if (transcript[4]) {
-            this.transcriptomesTable.push([transcript[2], transcript[1]]);
-          }
-        });
-      }
-      let data = {}
-      if (localStorage.getItem('isMultiple') == 'True') {
-  
-      }
-      else {
-        let name = this.analyzeName.value;
-        
-  
-  
-        if (this.login.isLoggedIn()) {
-          data = {
-            "study_name": this.analyzeName.value,
-            "public": this.isPublic.value,
-            "analysis": { 
-              [name]: { 
-              "metabolites": _.fromPairs(this.metabolitesTable), 
-              "transcriptomes": _.fromPairs(this.transcriptomesTable),
-              "Label": "not_provided" } },
-            "group": "not_provided",
-            "disease": this.myControl.value["id"]
-          };
-        }  // if
-  
-  
-        else {
-          data = {
-            "study_name": this.analyzeName.value,
-            "public": this.isPublic.value,
-            "analysis": { 
-              [name]: { 
-              "metabolites": _.fromPairs(this.metabolitesTable), 
-              "transcriptomes": _.fromPairs(this.transcriptomesTable),
-              "Label": "not_provided" } },
-            "group": "not_provided",
-            "disease": this.myControl.value["id"],
-            "email": this.analyzeEmail.value
-          };
-        } // inner else
-  
-  
-      }  // else
-      // console.log(data);
-      if (selectedMethod === this.methods.Metabolitics) {
-        this.metabolitics(data);
-      }
-      else if (selectedMethod === this.methods.DirectPathwayMapping) {
-        this.directPathwayMapping(data);
-      }
-      else if (selectedMethod === this.methods.MetaboliteEnrichment) {
-        this.metaboliteEnrichment(data);
-      }
+    this.omicsService.selectedOmics$.subscribe(_ => {
+      this.omicsArray = this.omicsService.getSelectedOmicsArray();
+    });
+
+    // Initialize tab index from service
+    this.selectedTabIndex = this.omicsService.getCurrentOmicsIndex();
+  }
+
+  analyze() {
+    const selectedMethod = this.selectedMethod;
+    if (!this.myControl.value) {
+      alert("Please choose a disease on the top of the page to start analysis.");
+      return;
     }
 
-    metabolitics(data) {
+    this.mConTable.forEach(metabolite => {
+      if (metabolite[4]) {
+        this.metabolitesTable.push([metabolite[2], metabolite[1]]);
+      }
+    });
+    if (this.hasTranscriptomicsSelected()) {
+      this.tConTable.forEach(transcript => {
+        if (transcript[4]) {
+          this.transcriptomesTable.push([transcript[2], transcript[1]]);
+        }
+      });
+    }
+    let data = {}
+    if (localStorage.getItem('isMultiple') == 'True') {
+
+    }
+    else {
+      let name = this.analyzeName.value;
+
+
 
       if (this.login.isLoggedIn()) {
-        this.notify.info('Analysis Start', 'Analysis in progress');
-        this.http.post(`${AppSettings.API_ENDPOINT}/analysis/fva`,
-          data, this.login.optionByAuthorization())
-          .subscribe((data: any) => {
-            this.router.navigate(['/panel/past-analysis'])
+        data = {
+          "study_name": this.analyzeName.value,
+          "public": this.isPublic.value,
+          "analysis": {
+            [name]: {
+              "metabolites": _.fromPairs(this.metabolitesTable),
+              "transcriptomes": _.fromPairs(this.transcriptomesTable),
+              "Label": "not_provided"
+            }
           },
-            error => {
-              this.notify.error('Analysis Fail', error);
-            });
-      } // if
+          "group": "not_provided",
+          "disease": this.myControl.value["id"]
+        };
+      }  // if
+
+
       else {
-        this.http.post(`${AppSettings.API_ENDPOINT}/analysis/fva/public`,
-          data)
-          .subscribe((data: any) => {
-            this.notify.info('Analysis Start', 'Results will be sent by email.');
-            this.router.navigate(['/search']);
+        data = {
+          "study_name": this.analyzeName.value,
+          "public": this.isPublic.value,
+          "analysis": {
+            [name]: {
+              "metabolites": _.fromPairs(this.metabolitesTable),
+              "transcriptomes": _.fromPairs(this.transcriptomesTable),
+              "Label": "not_provided"
+            }
           },
-            error => {
-              this.notify.error('Analysis Fail', error);
-            });
-  
-      }
-  
+          "group": "not_provided",
+          "disease": this.myControl.value["id"],
+          "email": this.analyzeEmail.value
+        };
+      } // inner else
+
+
+    }  // else
+    // console.log(data);
+    if (selectedMethod === this.methods.Metabolitics) {
+      this.metabolitics(data);
     }
-  
-    directPathwayMapping(data) {
-  
-      if (this.login.isLoggedIn()) {
-        this.notify.info('Analysis Start', 'Analysis in progress');
-        this.http.post(`${AppSettings.API_ENDPOINT}/analysis/direct-pathway-mapping`,
-          data, this.login.optionByAuthorization())
-          .subscribe((data: any) => {
-            this.router.navigate(['/panel/past-analysis'])
-          },
-            error => {
-              this.notify.error('Analysis Fail', error);
-            });
-  
-        localStorage.setItem('search-results', JSON.stringify(data));
-      } // if
-      else {
-        this.http.post(`${AppSettings.API_ENDPOINT}/analysis/direct-pathway-mapping/public`,
-          data, this.login.optionByAuthorization())
-          .subscribe((data: any) => {
-            this.notify.info('Analysis Start', 'Analysis in progress');
-            this.notify.success('Analysis Done', 'Analysis Results sent to your email');
-            this.router.navigate(['/search']);
-          },
-            error => {
-              this.notify.error('Analysis Fail', error);
-            });
-  
-        localStorage.setItem('search-results', JSON.stringify(data));
-  
-      }
-  
+    else if (selectedMethod === this.methods.DirectPathwayMapping) {
+      this.directPathwayMapping(data);
     }
-  
-    metaboliteEnrichment(data) {
-      if (this.login.isLoggedIn()) {
-        this.notify.info('Analysis Start', 'Analysis in progress');
-        this.http.post(`${AppSettings.API_ENDPOINT}/analysis/pathway-enrichment`,
-          data, this.login.optionByAuthorization())
-          .subscribe((data: any) => {
-            this.router.navigate(['/panel/past-analysis'])
-          },
-            error => {
-              this.notify.error('Analysis Fail', error);
-            });
-  
-        localStorage.setItem('search-results', JSON.stringify(data));
-      } 
-      else {
-        this.http.post(`${AppSettings.API_ENDPOINT}/analysis/pathway-enrichment/public`,
-          data, this.login.optionByAuthorization())
-          .subscribe((data: any) => {
-            this.notify.info('Analysis Start', 'Analysis in progress');
-            this.notify.success('Analysis Done', 'Analysis Results sent to your email');
-            this.router.navigate(['/search']);
-          },
-            error => {
-              this.notify.error('Analysis Fail', error);
-            });
-  
-        localStorage.setItem('search-results', JSON.stringify(data));
-  
-      }
+    else if (selectedMethod === this.methods.MetaboliteEnrichment) {
+      this.metaboliteEnrichment(data);
     }
-  
+  }
+
+  metabolitics(data) {
+
+    if (this.login.isLoggedIn()) {
+      this.notify.info('Analysis Start', 'Analysis in progress');
+      this.http.post(`${AppSettings.API_ENDPOINT}/analysis/fva`,
+        data, this.login.optionByAuthorization())
+        .subscribe((data: any) => {
+          this.router.navigate(['/panel/past-analysis'])
+        },
+          error => {
+            this.notify.error('Analysis Fail', error);
+          });
+    } // if
+    else {
+      this.http.post(`${AppSettings.API_ENDPOINT}/analysis/fva/public`,
+        data)
+        .subscribe((data: any) => {
+          this.notify.info('Analysis Start', 'Results will be sent by email.');
+          this.router.navigate(['/search']);
+        },
+          error => {
+            this.notify.error('Analysis Fail', error);
+          });
+
+    }
+
+  }
+
+  directPathwayMapping(data) {
+
+    if (this.login.isLoggedIn()) {
+      this.notify.info('Analysis Start', 'Analysis in progress');
+      this.http.post(`${AppSettings.API_ENDPOINT}/analysis/direct-pathway-mapping`,
+        data, this.login.optionByAuthorization())
+        .subscribe((data: any) => {
+          this.router.navigate(['/panel/past-analysis'])
+        },
+          error => {
+            this.notify.error('Analysis Fail', error);
+          });
+
+      localStorage.setItem('search-results', JSON.stringify(data));
+    } // if
+    else {
+      this.http.post(`${AppSettings.API_ENDPOINT}/analysis/direct-pathway-mapping/public`,
+        data, this.login.optionByAuthorization())
+        .subscribe((data: any) => {
+          this.notify.info('Analysis Start', 'Analysis in progress');
+          this.notify.success('Analysis Done', 'Analysis Results sent to your email');
+          this.router.navigate(['/search']);
+        },
+          error => {
+            this.notify.error('Analysis Fail', error);
+          });
+
+      localStorage.setItem('search-results', JSON.stringify(data));
+
+    }
+
+  }
+
+  metaboliteEnrichment(data) {
+    if (this.login.isLoggedIn()) {
+      this.notify.info('Analysis Start', 'Analysis in progress');
+      this.http.post(`${AppSettings.API_ENDPOINT}/analysis/pathway-enrichment`,
+        data, this.login.optionByAuthorization())
+        .subscribe((data: any) => {
+          this.router.navigate(['/panel/past-analysis'])
+        },
+          error => {
+            this.notify.error('Analysis Fail', error);
+          });
+
+      localStorage.setItem('search-results', JSON.stringify(data));
+    }
+    else {
+      this.http.post(`${AppSettings.API_ENDPOINT}/analysis/pathway-enrichment/public`,
+        data, this.login.optionByAuthorization())
+        .subscribe((data: any) => {
+          this.notify.info('Analysis Start', 'Analysis in progress');
+          this.notify.success('Analysis Done', 'Analysis Results sent to your email');
+          this.router.navigate(['/search']);
+        },
+          error => {
+            this.notify.error('Analysis Fail', error);
+          });
+
+      localStorage.setItem('search-results', JSON.stringify(data));
+
+    }
+  }
+
   hasTranscriptomicsSelected(): boolean {
     return this.omicsArray.some(o => o.type === 'Transcriptomics');
   }
@@ -294,9 +298,9 @@ export class SubmitComponent implements OnInit {
     // Determine current tab's omics type using selectedTabIndex
     const current = (this.omicsArray && this.omicsArray[this.selectedTabIndex]) ? this.omicsArray[this.selectedTabIndex].type : undefined;
     if (!current) { return 0; }
-    
+
     let activeTable;
-    switch(current) {
+    switch (current) {
       case 'Metabolomics': activeTable = this.uploadService.mConTable; break;
       case 'Transcriptomics': activeTable = this.uploadService.tConTable; break;
       case 'Proteomics': activeTable = this.uploadService.pConTable; break;
@@ -305,7 +309,7 @@ export class SubmitComponent implements OnInit {
       case 'Epigenomics': activeTable = this.uploadService.epConTable; break;
       default: return 0;
     }
-    
+
     const total = (activeTable && activeTable.length) ? activeTable.length : 0;
     const unmapped = (activeTable || []).filter((m) => m[4] === false).length;
     return Math.max(total - unmapped, 0);
@@ -325,10 +329,10 @@ export class SubmitComponent implements OnInit {
   getUnmappedCount(): number {
     const current = (this.omicsArray && this.omicsArray[this.selectedTabIndex]) ? this.omicsArray[this.selectedTabIndex].type : undefined;
     if (!current) { return 0; }
-    
+
     // Calculate directly from the table to match pie chart logic
     let activeTable;
-    switch(current) {
+    switch (current) {
       case 'Metabolomics': activeTable = this.uploadService.mConTable; break;
       case 'Transcriptomics': activeTable = this.uploadService.tConTable; break;
       case 'Proteomics': activeTable = this.uploadService.pConTable; break;
@@ -337,7 +341,7 @@ export class SubmitComponent implements OnInit {
       case 'Epigenomics': activeTable = this.uploadService.epConTable; break;
       default: return 0;
     }
-    
+
     return (activeTable || []).filter((m) => m[4] === false).length;
   }
 
@@ -350,6 +354,24 @@ export class SubmitComponent implements OnInit {
       case 'Genomic Variants': return 'Genomic Variants List';
       case 'Epigenomics': return 'Epigenomic Features List';
     }
+  }
+
+  isAnalyzeDisabled(): boolean {
+    // Disable if diffusion model is available (transcriptomics selected) and method is Direct Pathway Mapping or Pathway Enrichment
+    if (this.hasTranscriptomicsSelected() &&
+      (this.selectedMethod === this.methods.DirectPathwayMapping ||
+        this.selectedMethod === this.methods.MetaboliteEnrichment)) {
+      return true;
+    }
+    // Also disable if form is invalid
+    return !this.analyzeName.valid;
+  }
+
+  shouldShowDiffusionError(): boolean {
+    // Show error message when diffusion model is available and method is not Metabolitics
+    return this.hasTranscriptomicsSelected() &&
+      (this.selectedMethod === this.methods.DirectPathwayMapping ||
+        this.selectedMethod === this.methods.MetaboliteEnrichment);
   }
 
   getNamePlaceholder(): string {
@@ -381,13 +403,13 @@ export class SubmitComponent implements OnInit {
       });
   }
   displayFn(disease?: Disease): string | undefined {
-      return disease ? disease.name : undefined;
-    }
+    return disease ? disease.name : undefined;
+  }
 
   private _filter(name: string): Disease[] {
-      const filterValue = name.toLowerCase();
-  
-      return this.diseases.filter(option => option.name.toLowerCase().indexOf(filterValue) === 0 || option.synonym.toLowerCase().indexOf(filterValue) === 0);
+    const filterValue = name.toLowerCase();
+
+    return this.diseases.filter(option => option.name.toLowerCase().indexOf(filterValue) === 0 || option.synonym.toLowerCase().indexOf(filterValue) === 0);
   }
 
   //TODO: Add data change functions here for different tabs.

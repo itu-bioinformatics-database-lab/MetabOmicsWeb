@@ -50,7 +50,14 @@
     </div>
   </ng-container>
   <div class="col-md-2">
-    <button (click)="analyze()" class="btn btn-default" [disabled]="!analyzeName.valid">Analyze</button>
+    <button (click)="analyze()" class="btn btn-default" [disabled]="isAnalyzeDisabled()">Analyze</button>
+  </div>
+</div>
+<div class="row" *ngIf="shouldShowDiffusionError()">
+  <div class="col-md-12">
+    <div class="alert alert-warning" style="margin-top: 10px;">
+      <strong>Warning:</strong> With Linear Threshold, you can only use Metabolitics method!
+    </div>
   </div>
 </div>
 
