@@ -34,22 +34,35 @@ def save_analysis(analysis_id, concentration_changes, gene_changes = None, regis
     analysis = Analyses.query.get(analysis_id)
     analysis.start_time = datetime.datetime.now()
     db.session.commit()
-    with open('../models/api_model.p', 'rb') as f:
-        reaction_scaler = pickle.load(f)
+    # With open('../models/api_model.p', 'rb') as f:
+    #   reaction_scaler = pickle.load(f)
 
-    reaction_scaler['metabolitics-transformer'].analyzer.model.solver = 'cplex'
+    # reaction_scaler['metabolitics-transformer'].analyzer.model.solver = 'cplex'
 
     pathway_scaler = MetaboliticsPipeline([
         'pathway-transformer',
         'transport-pathway-elimination'
     ])
     # print ("-----------------------1")
+    metabolitics_transformer = MetaboliticsTransformer()
 
-    results_reaction = reaction_scaler.transform([concentration_changes], gene_changes)
-    results_pathway = pathway_scaler.transform(results_reaction)
+    X_train_transformed = metabolitics_transformer.transform(
+    X=concentration_changes, X_tr=gene_changes)
+
+    model = MetaboliticsPipeline([
+        ('reaction-diff', ReactionDiffTransformer())
+    ])
+    # model = MetaboliticsPipeline([
+    #     'metabolitics-transformer',
+    #     'reaction-diff',
+    # ])
+    results_diff_score = model.fit_transform(X_train_transformed)
+    results_pathway = pathway_scaler.transform(results_diff_score)
+    # results_reaction = reaction_scaler.transform([concentration_changes], gene_changes)
+    # results_pathway = pathway_scaler.transform(results_reaction)
 
 
-    analysis.results_reaction = analysis.clean_name_tag(results_reaction)
+    analysis.results_reaction = analysis.clean_name_tag(results_diff_score)
     analysis.results_pathway = analysis.clean_name_tag(results_pathway)
     study = AnalysisMetadata.query.get(analysis.dataset_id)
     study.status = True

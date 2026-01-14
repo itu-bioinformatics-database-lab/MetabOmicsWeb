@@ -126,28 +126,36 @@ def generate_angular_friendly_model():
 
 @cli.command()
 def healties_model():
-    disease_name = 'BC'
-    path = '../datasets/diseases/%s.csv' % disease_name
-    X, y = SkUtilsIO(path).from_csv(label_column='stage')
-    y = ['bc' if i != 'h' else 'healthy' for i in y]
+    disease_name = 'metabData_breast'
+    gene_name = 'geneData_breast'
+    metab_path = '../datasets/diseases/%s.csv' % disease_name
+    gene_path = '../datasets/diseases/%s.csv' % gene_name
+    X, y = SkUtilsIO(metab_path).from_csv(label_column='Factors')
+    X_tr, y_tr = SkUtilsIO(gene_path).from_csv(label_column='Factors')
+    #y = ['bc' if i != 'h' else 'healthy' for i in y]
+    #y_tr = ['bc' if i != 'h' else 'healthy' for i in y_tr]
 
     pipe = MetaboliticsPipeline([
         # 'metabolite-name-mapping-toy',
         # 'metabolite-name-mapping',
-        'naming-toy',
-        'fold-change-scaler',
+        'naming-toy', 
+        # 'fold-change-scaler',
     ])
     X_t = pipe.fit_transform(X, y)
 
-    model = Pipeline([
-        ('metabolitics-transformer', MetaboliticsTransformer()),
+    metabolitics_transformer = MetaboliticsTransformer()
+
+    X_train_transformed = metabolitics_transformer.transform(
+    X=X_t, X_tr=X_tr)
+
+    model = MetaboliticsPipeline([
         ('reaction-diff', ReactionDiffTransformer())
     ])
     # model = MetaboliticsPipeline([
     #     'metabolitics-transformer',
     #     'reaction-diff',
     # ])
-    model.fit(X_t, y)
+    model.fit_transform(X_train_transformed, y)
     with open('../models/api_model.p', 'wb') as f:
         pickle.dump(model, f)
 

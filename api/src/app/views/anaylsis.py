@@ -177,7 +177,7 @@ def fva_analysis():
 
                 db.session.add(analysis)
                 db.session.commit()
-                save_analysis.delay(analysis.id, value["metabolites"] if healthy_metab_data is None else X_t, gene_changes=None if healthy_metab_data is None else X_gene_scaled)
+                save_analysis.delay(analysis.id, value["metabolites"] if healthy_metab_data is None else X_t, gene_changes=None if healthy_gene_data is None else X_gene_scaled)
                 analysis_id = analysis.id
 
         return jsonify({'id': analysis_id})
@@ -325,11 +325,9 @@ def direct_pathway_mapping():
         X_gene_scaled = None
         for key,value in data['analysis'].items():
             if len(value['metabolites']) > 0:
-                if value['Label'] == data['group'].lower() + ' label avg':
+                if ((value['Label'] == data['group'].lower() + ' label avg') or (value['Label'] == data['group'].lower())):
                     healthy_metab_data = value['metabolites']
                     healthy_gene_data = value['transcriptomes']
-                    print("healthy_metab_data", healthy_metab_data)
-                    print("healthy_gene_data", healthy_gene_data)
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
             current_metabolites = value["metabolites"]
             current_genes = value["transcriptomes"]
@@ -357,7 +355,7 @@ def direct_pathway_mapping():
                         for k, v in healthy_gene_data.items():
                             healthy_gene_data[k] = v if v != 0 else sys.float_info.min
                         
-                        # Calculate scaled genes
+                        # Calculate scaled genes error
                         X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
                         print("x_gene_scaled ", X_gene_scaled)
                 metabolite_data = OmicsDatasets(
@@ -366,7 +364,6 @@ def direct_pathway_mapping():
                     owner_email = str(user),
                     is_public = True if request.json['public'] else False
                 )
-                print("metabolite_data", metabolite_data)
                 transcriptome_data = None
 
                 if(X_gene_scaled is not None):
@@ -376,7 +373,6 @@ def direct_pathway_mapping():
                         owner_email = str(user),
                         is_public = True if request.json['public'] else False
                     )
-                print("transcriptome_data", transcriptome_data)
                 metabolite_data.disease_id = disease.id
                 metabolite_data.disease = disease
                 db.session.add(metabolite_data)
@@ -544,7 +540,7 @@ def pathway_enrichment():
         X_gene_scaled = None
         for key,value in data['analysis'].items():
             if len(value['metabolites']) > 0:
-                if value['Label'] == data['group'].lower() + ' label avg':
+                if ((value['Label'] == data['group'].lower() + ' label avg') or (value['Label'] == data['group'].lower())):
                     healthy_metab_data = value['metabolites']
                     healthy_gene_data = value['transcriptomes']
 
@@ -919,7 +915,6 @@ def analysis_details(type):
     print(returned_data)
     return jsonify(returned_data)
 
-## TODO handle frontend for diffusion_method!
 @app.route('/analysis/list')
 @jwt_required()
 def user_analysis():
@@ -1111,12 +1106,12 @@ def search_analysis_by_metabol():
 
     ids = db.session.query(OmicsDatasets.id).all()
     for i in ids:  # loop over the Ids
-        data = OmicsDatasets.query.filter_by(id=i[0]).first();
+        data = OmicsDatasets.query.filter_by(id=i[0]).first()
         if data.omics_type != "metabolite":
             continue
         metabolites_data = data.omics_data
         if metabolite_name in list(metabolites_data) :
-            analysis = Analyses.query.filter_by(omics_data_id=i[0]).first();
+            analysis = Analyses.query.filter_by(omics_data_id=i[0]).first()
             study = AnalysisMetadata.query.get(analysis.dataset_id)
             method = AnalysisMethod.query.get(study.analysis_method_id)
             temp = {"anlysisId":analysis.dataset.id,'study':analysis.dataset.name,"analysis_method":method.name,'case':analysis.omics_data_id,'name':metabolite_name}
