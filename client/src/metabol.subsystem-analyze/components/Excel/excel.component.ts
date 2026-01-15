@@ -155,7 +155,7 @@ export class ExcelComponent implements OnInit {
           let temp_metabol_name;
           for (var _j = 0; _j < this.cases.length; _j++) {
             temp_metabol_name = this.metaboliteNames[_i];
-            temp_list.push(this.usersData2['analysis'][this.cases[_j]]["Metabolites"][this.metaboliteNames[_i]]);
+            temp_list.push(this.usersData2['analysis'][this.cases[_j]]["metabolites"][this.metaboliteNames[_i]]);
           }
           if (recon.metabolites[temp_metabol_name]) {
             temp_list.unshift(recon.metabolites[temp_metabol_name].id + " - (" + recon.metabolites[temp_metabol_name].name + ")");
@@ -235,7 +235,7 @@ export class ExcelComponent implements OnInit {
         if (this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["transcriptomes"]) {
           val = this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["transcriptomes"][temp_gene_name];
         } else {
-          val = this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["Metabolites"][temp_gene_name];
+          val = this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["metabolites"][temp_gene_name];
         }
         temp_list.push(val);
       }
@@ -407,7 +407,7 @@ export class ExcelComponent implements OnInit {
             this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersDataTranscriptomics['analysis'][caseName]['transcriptomes'];
           } else {
             // Fallback if backend used old key
-            this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersDataTranscriptomics['analysis'][caseName]['Metabolites'];
+            this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersDataTranscriptomics['analysis'][caseName]['metabolites'];
           }
         }
       }
@@ -422,9 +422,9 @@ export class ExcelComponent implements OnInit {
       // Rename Metabolites to transcriptomes? or keep and let backend handle?
       // Backend likely expects specific keys.
       for (let caseName in this.usersData2['analysis']) {
-        if (!this.usersData2['analysis'][caseName]['transcriptomes'] && this.usersData2['analysis'][caseName]['Metabolites']) {
-          this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersData2['analysis'][caseName]['Metabolites'];
-          delete this.usersData2['analysis'][caseName]['Metabolites'];
+        if (!this.usersData2['analysis'][caseName]['transcriptomes'] && this.usersData2['analysis'][caseName]['metabolites']) {
+          this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersData2['analysis'][caseName]['metabolites'];
+          delete this.usersData2['analysis'][caseName]['metabolites'];
         }
       }
       if (this.login.isLoggedIn()) {

@@ -266,7 +266,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
         data = {
           "study_name": this.analyzeName.value,
           "public": this.isPublic.value,
-          "analysis": { [name]: { "Metabolites": _.fromPairs(this.analysisTable), "Label": "not_provided" } },
+          "analysis": { [name]: { "metabolites": _.fromPairs(this.analysisTable), "Label": "not_provided" } },
           "group": "not_provided",
           "disease": this.myControl.value["id"]
         };
@@ -277,7 +277,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
         data = {
           "study_name": this.analyzeName.value,
           "public": this.isPublic.value,
-          "analysis": { [name]: { "Metabolites": _.fromPairs(this.analysisTable), "Label": "not_provided" } },
+          "analysis": { [name]: { "metabolites": _.fromPairs(this.analysisTable), "Label": "not_provided" } },
           "group": "not_provided",
           "disease": this.myControl.value["id"],
           "email": this.analyzeEmail.value

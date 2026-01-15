@@ -132,7 +132,10 @@ def metabolc(data, omics_type='Metabolomics'):
                 if original_name in mapping_data1.keys():
                     # For graph, we might want the label? using original name as ID if found
                     node = mapping_data1[original_name]
-                    mapped_name = node.get('label', original_name) + ' - (' + original_name + ')'
+                    label_val = node.get('label', original_name)
+                    if isinstance(label_val, list):
+                        label_val = label_val[0] if len(label_val) > 0 else original_name
+                    mapped_name = str(label_val) + ' - (' + original_name + ')'
                     metabols.append(mapped_name)
                     isMapped[mapped_name] = {'isMapped': True}
                     metabols2[mapped_name] = original_name
@@ -140,6 +143,8 @@ def metabolc(data, omics_type='Metabolomics'):
                 # Check synonyms (Uniprot)
                 elif original_name in mapping_data2.keys():
                     uniprots = mapping_data2[original_name]
+                    if not isinstance(uniprots, list):
+                        uniprots = [uniprots]
                     matched = False
                     mapped_name_final = original_name
                     
@@ -149,12 +154,18 @@ def metabolc(data, omics_type='Metabolomics'):
                         
                         if transcript_id in mapping_data1:
                            node = mapping_data1[transcript_id]
-                           mapped_name_final = node.get('label', transcript_id) + ' - (' + transcript_id + ')'
+                           label_val = node.get('label', transcript_id)
+                           if isinstance(label_val, list):
+                               label_val = label_val[0] if len(label_val) > 0 else transcript_id
+                           mapped_name_final = str(label_val) + ' - (' + transcript_id + ')'
                            matched = True
                            break
                         elif transcript_id_x in mapping_data1:
                            node = mapping_data1[transcript_id_x]
-                           mapped_name_final = node.get('label', transcript_id_x) + ' - (' + transcript_id_x + ')'
+                           label_val = node.get('label', transcript_id_x)
+                           if isinstance(label_val, list):
+                                 label_val = label_val[0] if len(label_val) > 0 else transcript_id_x
+                           mapped_name_final = str(label_val) + ' - (' + transcript_id_x + ')'
                            matched = True
                            break
                     
@@ -234,7 +245,7 @@ def excel_data_Prpcessing(data, meta, omics_type='Metabolomics'):
         if omics_type == 'Transcriptomics':
              users_metabolite[key] = {"transcriptomes": temp, "Label": users_labels[key]}
         else:
-             users_metabolite[key] = {"Metabolites": temp, "Label": users_labels[key]}
+             users_metabolite[key] = {"metabolites": temp, "Label": users_labels[key]}
     #
     processed_users_data = {"study_name": study_name, "group": group_control_label,
                             "analysis": users_metabolite,'isMapped':isMapped, 'metabol':metabol2}
@@ -400,7 +411,7 @@ def mwlab_mapper():
 
 
 
-            mapped[sample] = {"Metabolites": temp_dict, "Label": "not_provided"}
+            mapped[sample] = {"metabolites": temp_dict, "Label": "not_provided"}
 
         final = {"study_name":study_name,"analysis":mapped,"group":"not_provided",'isMapped':isMapped}
         if len(list(final['analysis'].keys())) > 1:
@@ -422,8 +433,8 @@ def group_avg(sample_data3, checker=1, omics_type='Metabolomics'):
     - foldChanges from db
 
     """
-    
-    data_key = 'transcriptomes' if omics_type == 'Transcriptomics' else 'Metabolites'
+
+    data_key = 'transcriptomes' if omics_type == 'Transcriptomics' else 'metabolites'
 
 
     labels = {}

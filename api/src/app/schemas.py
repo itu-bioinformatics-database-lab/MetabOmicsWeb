@@ -17,6 +17,7 @@ class AnalysisInputSchema(Schema):
     disease = fields.Integer(required=True)
     metabolites = fields.List(required=False, cls_or_instance=fields.String())
     transcriptomes = fields.List(required=False, cls_or_instance=fields.String())
+    metabol = fields.Dict(required=False)
 
 class AnalysisInputSchema2(Schema):
     study_name = fields.String(required=True)

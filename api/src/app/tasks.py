@@ -1,7 +1,7 @@
 import datetime
 import pickle
 
-from metabomics.preprocessing import MetaboliticsPipeline
+from metabomics.preprocessing import *
 import celery
 from .models import db, Analyses, AnalysisMetadata, OmicsDatasets, Diseases, DiseaseModel
 from .services.mail_service import *
@@ -46,17 +46,24 @@ def save_analysis(analysis_id, concentration_changes, gene_changes = None, regis
     # print ("-----------------------1")
     metabolitics_transformer = MetaboliticsTransformer()
 
+    if gene_changes is None:
+        print("No gene expression data provided. initializing empty gene data.")
+        # Create a list containing an empty dict for every item in concentration_changes
+        gene_changes = [{} for _ in concentration_changes]
+
     X_train_transformed = metabolitics_transformer.transform(
     X=concentration_changes, X_tr=gene_changes)
 
     model = MetaboliticsPipeline([
-        ('reaction-diff', ReactionDiffTransformer())
+        'reaction-diff'
     ])
     # model = MetaboliticsPipeline([
     #     'metabolitics-transformer',
     #     'reaction-diff',
     # ])
-    results_diff_score = model.fit_transform(X_train_transformed)
+    print(X_train_transformed)
+    results_diff_score = model.transform(X_train_transformed)
+
     results_pathway = pathway_scaler.transform(results_diff_score)
     # results_reaction = reaction_scaler.transform([concentration_changes], gene_changes)
     # results_pathway = pathway_scaler.transform(results_reaction)
