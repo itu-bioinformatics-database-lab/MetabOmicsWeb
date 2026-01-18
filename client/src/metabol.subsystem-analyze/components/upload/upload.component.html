@@ -24,10 +24,10 @@
     </concentration-table>
   </div>
 
-  <div *ngIf="currentOmics === 'miRNA' && mrConTable && mrConTable.length > 0">
+  <div *ngIf="currentOmics === 'miRNAs' && mrConTable && mrConTable.length > 0">
     <concentration-table 
       [mrConTable]="mrConTable"
-      [currentOmics]="'miRNA'">
+      [currentOmics]="'miRNAs'">
     </concentration-table>
   </div>
 

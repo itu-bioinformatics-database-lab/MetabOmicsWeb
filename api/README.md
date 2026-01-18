@@ -96,11 +96,11 @@ Developing Metabolitics API inside a Docker container built from Dockerfile ensu
 
 18. To run **metabolitics-api-v3**, run the below command under **src** directory and open **localhost:5000**.
 
-    `gunicorn --bind 0.0.0.0:5000 --workers=2 app:app --reload`
+    `gunicorn --bind 0.0.0.0:5000 --workers=2 app:app --reload --timeout 300`
 
 19. To run **Celery**, run the below command under **src** directory
 
-    `celery -A app.celery worker`
+    `celery -A app.celery worker -E`
 
 Visit following links for more information:
 

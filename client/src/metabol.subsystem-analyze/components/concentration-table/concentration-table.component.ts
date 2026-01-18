@@ -41,6 +41,10 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   @Input() epConTable: Array<[string, number, string, string, boolean]> = [];
   @Input() unmappedMetabolites: Array<[string, number, string, string, boolean]> = [];
   @Input() unmappedTranscriptomics: Array<[string, number, string, string, boolean]> = [];
+  @Input() unmappedProteomics: Array<[string, number, string, string, boolean]> = [];
+  @Input() unmappedMiRNAs: Array<[string, number, string, string, boolean]> = [];
+  @Input() unmappedGenomicVariants: Array<[string, number, string, string, boolean]> = [];
+  @Input() unmappedEpigenomics: Array<[string, number, string, string, boolean]> = [];
   @Input() currentOmics: string;
   myControl = new FormControl();
   analysisTable: Array<[string, number]> = [];
@@ -65,8 +69,8 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   comboboxMethods: Array<object> = [
     { id: 0, name: "Metabolitics" },
     { id: 1, name: "Direct Pathway Mapping" },
-    { id: 2, name: "Pathway Enrichment"},
-    { id: 3, name: "Linear Threshold"}
+    { id: 2, name: "Pathway Enrichment" },
+    { id: 3, name: "Linear Threshold" }
   ];
   methods = {
     Metabolitics: 0,
@@ -89,13 +93,13 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     let dateTime = new Date().toLocaleString();
-    
+
     // Initialize currentOmics if not provided
     if (!this.currentOmics) {
       this.currentOmics = this.omicsService.getCurrentOmics().type;
     }
-    
-    
+
+
     this.form = this.createForm();
     this.analyzeName = new FormControl("My Analysis - " + dateTime, Validators.required);
     this.isPublic = new FormControl(true, Validators.required);
@@ -121,7 +125,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
     this.updatePieChart();
   }
 
-  ngOnChanges(){
+  ngOnChanges() {
     this.updatePieChart();
   }
 
@@ -145,7 +149,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   }
 
   remove(index) {
-    switch(this.currentOmics){
+    switch (this.currentOmics) {
       case 'Metabolomics':
         this.mConTable.splice(index, 1);
         break;
@@ -155,7 +159,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
       case 'Proteomics':
         this.pConTable.splice(index, 1);
         break;
-      case 'miRNA':
+      case 'miRNAs':
         this.mrConTable.splice(index, 1);
         break;
       case 'Genomic Variants':
@@ -172,17 +176,17 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
     const activeTable = this.getActiveTable();
     const labels = this.getPieChartLabels();
     const unmappedCount = (activeTable || []).filter((m) => m[4] === false).length;
-    
+
     if (!activeTable || activeTable.length === 0) {
       return; // Don't render chart if no data
     }
-    
+
     var data = [{
       values: [activeTable.length - unmappedCount, unmappedCount],
       labels: labels,
       type: 'pie'
     }];
-  
+
     var layout = {
       height: 250,
       margin: {
@@ -190,18 +194,18 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
         b: 10,
       },
     };
-  
+
     const el = document.getElementById(this.chartId);
     if (!el) { return; }
     Plotly.react(el, data, layout);
   }
 
   private getPieChartLabels(): string[] {
-    switch(this.currentOmics) {
+    switch (this.currentOmics) {
       case 'Metabolomics': return ['Mapped Metabolites', 'Unmapped Metabolites'];
       case 'Transcriptomics': return ['Mapped Genes', 'Unmapped Genes'];
       case 'Proteomics': return ['Mapped Proteins', 'Unmapped Proteins'];
-      case 'miRNA': return ['Mapped miRNAs', 'Unmapped miRNAs'];
+      case 'miRNAs': return ['Mapped miRNAs', 'Unmapped miRNAs'];
       case 'Genomic Variants': return ['Mapped Variants', 'Unmapped Variants'];
       case 'Epigenomics': return ['Mapped Epigenomic Features', 'Unmapped Epigenomic Features'];
       default: return ['Mapped Items', 'Unmapped Items'];
@@ -224,7 +228,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
       } else {
         if (this.synonymList[value['name']]) {
           let name = this.prioritizeMetabolites(this.synonymList[value['name']]);
-          if (recon.metabolites[name]){
+          if (recon.metabolites[name]) {
             this.mConTable.push([value['name'], value['value'], name, recon.metabolites[name].name, true]);
           } else {
             this.mConTable.push([value['name'], value['value'], name, name, true]);
@@ -242,15 +246,15 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   analyze() {
     const selectedMethod = this.selectedMethod;
     const selectedModel = this.selectedModel;
-    if(!this.myControl.value){
+    if (!this.myControl.value) {
       alert("Please choose a disease on the top of the page to start analysis.");
       return;
     }
 
     this.mConTable.forEach(metabolite => {
-       if (metabolite[4]) {
-         this.analysisTable.push([metabolite[2], metabolite[1]]);
-       }
+      if (metabolite[4]) {
+        this.analysisTable.push([metabolite[2], metabolite[1]]);
+      }
     });
     console.log(this.analysisTable);
     let data = {}
@@ -330,7 +334,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min;
   }
-  
+
   metabolitics(data) {
 
     if (this.login.isLoggedIn()) {
@@ -405,7 +409,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
           });
 
       localStorage.setItem('search-results', JSON.stringify(data));
-    } 
+    }
     else {
       this.http.post(`${AppSettings.API_ENDPOINT}/analysis/pathway-enrichment/public`,
         data, this.login.optionByAuthorization())
@@ -422,7 +426,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
 
     }
   }
-  
+
   shouldShowOptions(): boolean {
     const selectedOmics = this.omicsService.getSelectedOmicsArray();
     const currentOmics = this.omicsService.getCurrentOmics();
@@ -430,7 +434,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
     if (!currentOmics) {
       return false;
     }
-    
+
     // Only show options if we're on the last selected omics type
     const lastSelectedOmics = selectedOmics[selectedOmics.length - 1];
     return currentOmics.type === lastSelectedOmics.type;
@@ -443,7 +447,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
 
     // Filter only matched genes (where r[4] is true)
     const matchedGenes = this.tConTable.filter(gene => gene[4]);
-    
+
     if (matchedGenes.length === 0) {
       this.notify.info('No matched genes to download', 'Info');
       return;
@@ -453,7 +457,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
     const csvContent = [
       ['Original Name', 'Change Value', 'TRRUST Name', 'TRRUST ID']
     ];
-    
+
     matchedGenes.forEach(gene => {
       csvContent.push([
         gene[0], // Original Name
@@ -462,7 +466,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
         gene[3]  // TRRUST ID
       ]);
     });
-    
+
     const csvString = csvContent.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
     // Create and download the file
@@ -475,16 +479,16 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     this.notify.success(`Downloaded ${matchedGenes.length} matched genes`, 'Success');
   }
 
   // Helper methods for template optimization
   getMappedLabel(): string {
-    switch(this.currentOmics) {
+    switch (this.currentOmics) {
       case 'Transcriptomics': return 'Number of Mapped Genes';
       case 'Proteomics': return 'Number of Mapped Proteins';
-      case 'miRNA': return 'Number of Mapped miRNAs';
+      case 'miRNAs': return 'Number of Mapped miRNAs';
       case 'Genomic Variants': return 'Number of Mapped Variants';
       case 'Epigenomics': return 'Number of Mapped Epigenomic Features';
       default: return 'Number of Mapped Metabolites';
@@ -492,11 +496,11 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   }
 
   private getActiveTable(): Array<[string, number, string, string, boolean]> {
-    switch(this.currentOmics) {
+    switch (this.currentOmics) {
       case 'Metabolomics': return this.mConTable;
       case 'Transcriptomics': return this.tConTable;
       case 'Proteomics': return this.pConTable;
-      case 'miRNA': return this.mrConTable;
+      case 'miRNAs': return this.mrConTable;
       case 'Genomic Variants': return this.gvConTable;
       case 'Epigenomics': return this.epConTable;
       default: return this.mConTable;
@@ -510,10 +514,10 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   }
 
   getUnmappedLabel(): string {
-    switch(this.currentOmics) {
+    switch (this.currentOmics) {
       case 'Transcriptomics': return 'Genes';
       case 'Proteomics': return 'Proteins';
-      case 'miRNA': return 'miRNAs';
+      case 'miRNAs': return 'miRNAs';
       case 'Genomic Variants': return 'Variants';
       case 'Epigenomics': return 'Epigenomic Features';
       default: return 'Metabolites';
@@ -521,11 +525,11 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   }
 
   private getTableByType(omicsType: string): Array<[string, number, string, string, boolean]> {
-    switch(omicsType) {
+    switch (omicsType) {
       case 'Metabolomics': return this.mConTable;
       case 'Transcriptomics': return this.tConTable;
       case 'Proteomics': return this.pConTable;
-      case 'miRNA': return this.mrConTable;
+      case 'miRNAs': return this.mrConTable;
       case 'Genomic Variants': return this.gvConTable;
       case 'Epigenomics': return this.epConTable;
       default: return this.mConTable;
@@ -534,14 +538,14 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
 
   getUnmappedCount(dataType?: string): number {
     const omicsType = dataType || this.currentOmics;
-    
+
     // Fall back to calculating directly from the table (preferred method)
     const activeTable = this.getTableByType(omicsType);
     return (activeTable || []).filter((m) => m[4] === false).length;
   }
 
   getListTitle(): string {
-    switch(this.currentOmics) {
+    switch (this.currentOmics) {
       case 'Metabolomics': return 'Metabolite List';
       case 'Transcriptomics': return 'Transcriptome List';
       case 'Proteomics': return 'Proteome List';
@@ -552,7 +556,7 @@ export class ConcentrationTableComponent implements OnInit, AfterViewInit {
   }
 
   getNamePlaceholder(): string {
-    switch(this.currentOmics) {
+    switch (this.currentOmics) {
       case 'Metabolomics': return 'Metabolite Name';
       case 'Transcriptomics': return 'Gene Name';
       case 'Proteomics': return 'Protein Name';

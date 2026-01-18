@@ -42,8 +42,12 @@ def excel():
     # processed_data['analysis']
     #print (processed_data)
     
-    if omics_type == 'Transcriptomics':
+    elif omics_type == 'Transcriptomics':
         processed_data['transcriptomes'] = metabolites
+    elif omics_type == 'Proteomics':
+        processed_data['proteins'] = metabolites
+    elif omics_type == 'miRNA':
+        processed_data['miRNAs'] = metabolites
     else:
         processed_data['metabolites'] = metabolites
         
@@ -96,13 +100,18 @@ def metabolc(data, omics_type='Metabolomics'):
         with open('../datasets/assets/new-synonym-mapping.json') as f:
             mapping_data2= json.load(f)
     
-    elif omics_type == 'Transcriptomics':
+    elif omics_type == 'Transcriptomics' or omics_type == 'Proteomics':
         with open('../datasets/assets/universalGraph_new.json') as f:
             mapping_data1 = json.load(f)
             mapping_data1 = mapping_data1["vertices"]
             
         with open('../datasets/assets/uniprot_synonym_mapping.json') as f:
             mapping_data2 = json.load(f)
+    
+    elif omics_type == 'miRNA':
+        with open('../datasets/assets/universalGraph_new.json') as f:
+            mapping_data1 = json.load(f)
+            mapping_data1 = mapping_data1["vertices"]
 
     for k in range(1, len(data), 1):
         if len(data[k]) > 0:
@@ -157,7 +166,7 @@ def metabolc(data, omics_type='Metabolomics'):
                            label_val = node.get('label', transcript_id)
                            if isinstance(label_val, list):
                                label_val = label_val[0] if len(label_val) > 0 else transcript_id
-                           mapped_name_final = str(label_val) + ' - (' + transcript_id + ')'
+                           mapped_name_final =  transcript_id 
                            matched = True
                            break
                         elif transcript_id_x in mapping_data1:
@@ -165,7 +174,7 @@ def metabolc(data, omics_type='Metabolomics'):
                            label_val = node.get('label', transcript_id_x)
                            if isinstance(label_val, list):
                                  label_val = label_val[0] if len(label_val) > 0 else transcript_id_x
-                           mapped_name_final = str(label_val) + ' - (' + transcript_id_x + ')'
+                           mapped_name_final =  transcript_id_x
                            matched = True
                            break
                     
@@ -177,6 +186,78 @@ def metabolc(data, omics_type='Metabolomics'):
                         metabols.append(original_name)
                         isMapped[original_name] = {'isMapped': False}
                         metabols2[original_name] = original_name
+                else:
+                    metabols.append(original_name)
+                    isMapped[original_name] = {'isMapped': False}
+                    metabols2[original_name] = original_name
+
+            elif omics_type == 'Proteomics':
+                # Check directly in universal graph
+                if original_name in mapping_data1.keys():
+                    node = mapping_data1[original_name]
+                    label_val = node.get('label', original_name)
+                    if isinstance(label_val, list):
+                        label_val = label_val[0] if len(label_val) > 0 else original_name
+                    mapped_name = str(label_val) + ' - (' + original_name + ')'
+                    metabols.append(mapped_name)
+                    isMapped[mapped_name] = {'isMapped': True}
+                    metabols2[mapped_name] = original_name
+                    
+                # Check synonyms (Uniprot)
+                elif original_name in mapping_data2.keys():
+                    uniprots = mapping_data2[original_name]
+                    if not isinstance(uniprots, list):
+                        uniprots = [uniprots]
+                    matched = False
+                    mapped_name_final = original_name
+                    
+                    for uniprot_id in uniprots:
+                        protein_id = uniprot_id + '_protein'
+                        protein_id_x = protein_id + '_x'
+                        
+                        if protein_id in mapping_data1:
+                           node = mapping_data1[protein_id]
+                           label_val = node.get('label', protein_id)
+                           if isinstance(label_val, list):
+                               label_val = label_val[0] if len(label_val) > 0 else protein_id
+                           mapped_name_final =  protein_id 
+                           matched = True
+                           break
+                        elif protein_id_x in mapping_data1:
+                           node = mapping_data1[protein_id_x]
+                           label_val = node.get('label', protein_id_x)
+                           if isinstance(label_val, list):
+                                 label_val = label_val[0] if len(label_val) > 0 else protein_id_x
+                           mapped_name_final =  protein_id_x
+                           matched = True
+                           break
+                    
+                    if matched:
+                        metabols.append(mapped_name_final)
+                        isMapped[mapped_name_final] = {'isMapped': True}
+                        metabols2[mapped_name_final] = original_name
+                    else:
+                        metabols.append(original_name)
+                        isMapped[original_name] = {'isMapped': False}
+                        metabols2[original_name] = original_name
+                else:
+                    metabols.append(original_name)
+                    isMapped[original_name] = {'isMapped': False}
+                    metabols2[original_name] = original_name
+
+            elif omics_type == 'miRNA':
+                if original_name in mapping_data1.keys():
+                     # Check if it has omic_type if needed, or just existence
+                    node = mapping_data1[original_name]
+                    label_val = node.get('label', original_name)
+                    if isinstance(label_val, list):
+                        label_val = label_val[0] if len(label_val) > 0 else original_name
+                    mapped_name = str(label_val) + ' - (' + original_name + ')'
+                    
+                    # For ID, using key directly as standard
+                    metabols.append(original_name) 
+                    isMapped[original_name] = {'isMapped': True}
+                    metabols2[original_name] = original_name
                 else:
                     metabols.append(original_name)
                     isMapped[original_name] = {'isMapped': False}
@@ -244,6 +325,10 @@ def excel_data_Prpcessing(data, meta, omics_type='Metabolomics'):
 
         if omics_type == 'Transcriptomics':
              users_metabolite[key] = {"transcriptomes": temp, "Label": users_labels[key]}
+        elif omics_type == 'Proteomics':
+             users_metabolite[key] = {"proteins": temp, "Label": users_labels[key]}
+        elif omics_type == 'miRNA':
+             users_metabolite[key] = {"miRNAs": temp, "Label": users_labels[key]}
         else:
              users_metabolite[key] = {"metabolites": temp, "Label": users_labels[key]}
     #
@@ -434,7 +519,13 @@ def group_avg(sample_data3, checker=1, omics_type='Metabolomics'):
 
     """
 
-    data_key = 'transcriptomes' if omics_type == 'Transcriptomics' else 'metabolites'
+    data_key = 'metabolites'
+    if omics_type == 'Transcriptomics':
+        data_key = 'transcriptomes'
+    elif omics_type == 'Proteomics':
+        data_key = 'proteins'
+    elif omics_type == 'miRNA':
+        data_key = 'miRNAs'
 
 
     labels = {}

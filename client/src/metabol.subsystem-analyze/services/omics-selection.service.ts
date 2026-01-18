@@ -17,7 +17,7 @@ export class OmicsSelectionService {
 
   selectedOmics$ = this.selectedOmicsSubject.asObservable();
   currentOmicsIndex$ = this.currentOmicsIndexSubject.asObservable();
-  
+
   // Computed observable for current omics
   get currentOmics$(): Observable<OmicsData | null> {
     return new Observable(observer => {
@@ -33,12 +33,12 @@ export class OmicsSelectionService {
     });
   }
 
-  constructor() {}
+  constructor() { }
 
   setSelectedOmics(omicsTypes: string[]): void {
     // Remove duplicates while preserving order
     const uniqueTypes = omicsTypes.filter((type, index) => omicsTypes.indexOf(type) === index);
-    
+
     // Define a consistent global order for known omics types
     const orderMap: { [key: string]: number } = {
       "Metabolomics": 0,
@@ -46,7 +46,7 @@ export class OmicsSelectionService {
       "Proteomics": 2,
       "Genomic Variants": 3,
       "Epigenomics": 4,
-      "miRNA": 5
+      "miRNAs": 5
     };
 
     // Create array of omics data sorted by predefined order
@@ -83,12 +83,12 @@ export class OmicsSelectionService {
   updateOmicsData(type: string, data: { fileName: string; data?: any }): void {
     const selectedOmics = this.selectedOmicsSubject.value;
     const index = selectedOmics.findIndex(o => o.type === type);
-    
+
     if (index !== -1) {
       const updatedOmics = selectedOmics.slice();
-      updatedOmics[index] = Object.assign({}, updatedOmics[index], { 
-        fileUploaded: true, 
-        ...data 
+      updatedOmics[index] = Object.assign({}, updatedOmics[index], {
+        fileUploaded: true,
+        ...data
       });
       this.selectedOmicsSubject.next(updatedOmics);
     }
@@ -101,7 +101,7 @@ export class OmicsSelectionService {
   getCurrentOmics(): OmicsData | null {
     const selectedOmics = this.selectedOmicsSubject.value;
     const currentIndex = this.currentOmicsIndexSubject.value;
-    
+
     if (selectedOmics && selectedOmics.length > 0 && currentIndex >= 0 && currentIndex < selectedOmics.length) {
       return selectedOmics[currentIndex];
     }

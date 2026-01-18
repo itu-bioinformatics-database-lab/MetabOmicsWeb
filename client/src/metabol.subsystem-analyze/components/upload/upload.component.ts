@@ -1,17 +1,17 @@
 import { AppDataLoader } from './../../../metabol.common/services/data-loader/data-loader.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ConcentrationTableComponent} from '../concentration-table/concentration-table.component';
-import {MetaboliteConcentration} from '../../models/metaboliteConcentration';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ConcentrationTableComponent } from '../concentration-table/concentration-table.component';
+import { MetaboliteConcentration } from '../../models/metaboliteConcentration';
 import * as _ from 'lodash';
 import * as XLSX from 'xlsx';
 import { utils, write, WorkBook } from 'xlsx';
 import * as LZString from 'lz-string';
 
-import {SubsystemAnalyzeService} from '../../services/subsystem-analyze';
-import {Router} from '@angular/router';
-import {LoginService} from '../../../metabol.auth/services/login';
-import {  FileUploader, FileSelectDirective, FileItem, ParsedResponseHeaders } from 'ng2-file-upload/ng2-file-upload';
+import { SubsystemAnalyzeService } from '../../services/subsystem-analyze';
+import { Router } from '@angular/router';
+import { LoginService } from '../../../metabol.auth/services/login';
+import { FileUploader, FileSelectDirective, FileItem, ParsedResponseHeaders } from 'ng2-file-upload/ng2-file-upload';
 
 import { HttpClient } from '@angular/common/http';
 import { SimpleNotificationsModule } from 'angular2-notifications';
@@ -29,7 +29,7 @@ import { UploadService } from '../../services/upload/upload.service';
   selector: 'app-upload',
   templateUrl: './upload.component.html',
   styleUrls: ['./upload.component.css'],
-  providers: [SubsystemAnalyzeService,SimpleNotificationsModule]
+  providers: [SubsystemAnalyzeService, SimpleNotificationsModule]
 })
 export class UploadComponent implements OnInit {
   selectedOmics: OmicsData[] = [];
@@ -76,7 +76,7 @@ export class UploadComponent implements OnInit {
         return 'genes';
       case 'Proteomics':
         return 'proteins';
-      case 'miRNA':
+      case 'miRNAs':
         return 'miRNAs';
       default:
         return 'items';
@@ -91,7 +91,7 @@ export class UploadComponent implements OnInit {
         return !this.tConTable || this.tConTable.length === 0;
       case 'Proteomics':
         return !this.pConTable || this.pConTable.length === 0;
-      case 'miRNA':
+      case 'miRNAs':
         return !this.mrConTable || this.mrConTable.length === 0;
       default:
         return true;

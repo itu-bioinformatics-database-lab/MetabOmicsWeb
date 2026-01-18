@@ -19,20 +19,16 @@
            (click)="toggleOmics('Proteomics')">
         Proteomics
       </div>
-      <div class="omics-option" 
-           [class.selected]="selectedOmics.includes('Genomic Variants')"
-           (click)="toggleOmics('Genomic Variants')">
+      <div class="omics-option disabled">
         Genomic Variants
       </div>
-      <div class="omics-option" 
-           [class.selected]="selectedOmics.includes('Epigenomics')"
-           (click)="toggleOmics('Epigenomics')">
+      <div class="omics-option disabled">
         Epigenomics
       </div>
       <div class="omics-option" 
-           [class.selected]="selectedOmics.includes('miRNA')"
-           (click)="toggleOmics('miRNA')">
-        miRNA
+           [class.selected]="selectedOmics.includes('miRNAs')"
+           (click)="toggleOmics('miRNAs')">
+        miRNAs
       </div>
     </div>
 

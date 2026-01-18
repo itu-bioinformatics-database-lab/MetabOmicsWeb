@@ -6,16 +6,14 @@ import { AuthGuard } from "../../metabol.auth";
 import { ConcentrationTableComponent } from './concentration-table';
 import { ManualComponent } from './manual/manual.component';
 import { UploadComponent } from './upload/upload.component';
-import { SubsystemAnalyzeComponent } from './subsystem-analyze.component';  
+import { SubsystemAnalyzeComponent } from './subsystem-analyze.component';
 import { ExcelComponent } from './Excel';
 import { WelcomeComponent } from './welcome/welcome.component';
 import { MetabolomicsComponent } from './metabolomics/metabolomics.component';
 import { TranscriptomicsComponent } from './transcriptomics/transcriptomics.component';
 import { MetabolomicsMeasurementComponent } from './metabolomics-measurement/metabolomics-measurement.component';
 import { ProteomicsComponent } from './proteomics/proteomics.component';
-import { ProteomicsUploadComponent } from './proteomics-upload/proteomics-upload.component';
 import { MirnaComponent } from './mirna/mirna.component';
-import { MirnaUploadComponent } from './mirna-upload/mirna-upload.component';
 import { SubmitComponent } from "./submit/submit.component";
 
 export const SubsystemAnalyzeRoutes: Routes = [
@@ -32,11 +30,9 @@ export const SubsystemAnalyzeRoutes: Routes = [
       { path: 'transcriptomics', component: TranscriptomicsComponent },
       { path: 'metabolomics-measurement', component: MetabolomicsMeasurementComponent },
       { path: 'proteomics', component: ProteomicsComponent },
-      { path: 'proteomics-upload', component: ProteomicsUploadComponent },
-      { path: 'mirna', component: MirnaComponent },
-      { path: 'mirna-upload', component: MirnaUploadComponent },
+      { path: 'mirnas', component: MirnaComponent },
       { path: '', redirectTo: 'welcome', pathMatch: 'full' },
-      { path: 'submit', component: SubmitComponent}
+      { path: 'submit', component: SubmitComponent }
     ],
     canActivate: [AuthGuard]
   }

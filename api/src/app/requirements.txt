@@ -8,7 +8,6 @@ billiard==3.5.0.2
 bleach==3.1.0
 blessings==1.7
 cameo==0.10.3
-cplex==22.1.0
 celery==4.0.2
 certifi==2019.6.16
 chardet==3.0.4

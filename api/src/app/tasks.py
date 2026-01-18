@@ -29,7 +29,7 @@ import math
 
 
 @celery.task()
-def save_analysis(analysis_id, concentration_changes, gene_changes = None, registered=True,mail='none',study2='none'):
+def save_analysis(analysis_id, concentration_changes, gene_changes = None, miRNAs = None, proteins = None, y = ['healthy'], registered=True,mail='none',study2='none'):
 
     analysis = Analyses.query.get(analysis_id)
     analysis.start_time = datetime.datetime.now()
@@ -43,16 +43,26 @@ def save_analysis(analysis_id, concentration_changes, gene_changes = None, regis
         'pathway-transformer',
         'transport-pathway-elimination'
     ])
-    # print ("-----------------------1")
-    metabolitics_transformer = MetaboliticsTransformer()
 
-    if gene_changes is None:
-        print("No gene expression data provided. initializing empty gene data.")
-        # Create a list containing an empty dict for every item in concentration_changes
-        gene_changes = [{} for _ in concentration_changes]
+    metabolitics_transformer = MetaboliticsTransformer()
+    X = [concentration_changes]
+    X_tr = [gene_changes] if gene_changes else [{} for _ in X]
+    X_miRNA = [miRNAs] if miRNAs else [{} for _ in X]
+    X_prot = [proteins] if proteins else [{} for _ in X]
+    X_methy = [{} for _ in X]
 
     X_train_transformed = metabolitics_transformer.transform(
-    X=concentration_changes, X_tr=gene_changes)
+        X=X, 
+        X_tr=X_tr,
+        X_prot=X_prot,
+        X_miRNA=X_miRNA, 
+        X_methy = X_methy,
+        y=None
+    )
+
+    print(X_train_transformed)
+
+    print('-----------------------------------------------------------------------------------------------------------------------------------------------------')
 
     model = MetaboliticsPipeline([
         'reaction-diff'
@@ -61,13 +71,12 @@ def save_analysis(analysis_id, concentration_changes, gene_changes = None, regis
     #     'metabolitics-transformer',
     #     'reaction-diff',
     # ])
-    print(X_train_transformed)
-    results_diff_score = model.transform(X_train_transformed)
-
+    results_diff_score = model.fit_transform(X_train_transformed, y=[y])
+    #print(results_diff_score)
     results_pathway = pathway_scaler.transform(results_diff_score)
     # results_reaction = reaction_scaler.transform([concentration_changes], gene_changes)
     # results_pathway = pathway_scaler.transform(results_reaction)
-
+    #print(results_pathway)
 
     analysis.results_reaction = analysis.clean_name_tag(results_diff_score)
     analysis.results_pathway = analysis.clean_name_tag(results_pathway)

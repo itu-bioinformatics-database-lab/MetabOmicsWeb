@@ -51,6 +51,8 @@ export class ExcelComponent implements OnInit {
   labels = [];
   metaboliteNames = [];
   transcriptomeNames = [];
+  proteinNames = [];
+  mirnaNames = [];
 
   // Transcriptomics data placeholders
   usersDataTranscriptomics;
@@ -58,6 +60,20 @@ export class ExcelComponent implements OnInit {
   unmappedTranscriptomics = [];
   casesTranscriptomics = [];
   labelsTranscriptomics = [];
+
+  // Proteomics data placeholders
+  usersDataProteomics;
+  proteomicsFormatted = [];
+  unmappedProteomics = [];
+  casesProteomics = [];
+  labelsProteomics = [];
+
+  // miRNA data placeholders
+  usersDataMiRNA;
+  mirnaFormatted = [];
+  unmappedMiRNA = [];
+  casesMiRNA = [];
+  labelsMiRNA = [];
 
   activeTab = 'Metabolomics'; // Default tab
   public synonymList: [] = synonyms;
@@ -216,10 +232,67 @@ export class ExcelComponent implements OnInit {
       this.processTranscriptomics();
     }
 
-    // Cleanup old keys if any, or maybe keep them until submission?
+    // --- Load Proteomics Data ---
+    const storedProteomics = localStorage.getItem('metabolitics-data-Proteomics');
+    if (storedProteomics) {
+      this.usersDataProteomics = JSON.parse(LZString.decompress(storedProteomics));
+
+      if (this.cases.length === 0) {
+        for (let name in this.usersDataProteomics['analysis']) {
+          this.cases.push(name);
+          this.labels.push(this.usersDataProteomics['analysis'][name]['Label']);
+        }
+      }
+
+      for (let name in this.usersDataProteomics['analysis']) {
+        this.casesProteomics.push(name);
+        this.labelsProteomics.push(this.usersDataProteomics['analysis'][name]['Label']);
+      }
+
+      if (this.usersDataProteomics['proteins']) {
+        this.proteinNames = this.usersDataProteomics['proteins'];
+      } else {
+        for (let key in this.usersDataProteomics['isMapped']) {
+          this.proteinNames.push(key);
+        }
+      }
+
+      this.processProteomics();
+    }
+
+    // --- Load miRNA Data ---
+    const storedMiRNA = localStorage.getItem('metabolitics-data-miRNAs');
+    if (storedMiRNA) {
+      this.usersDataMiRNA = JSON.parse(LZString.decompress(storedMiRNA));
+
+      if (this.cases.length === 0) {
+        for (let name in this.usersDataMiRNA['analysis']) {
+          this.cases.push(name);
+          this.labels.push(this.usersDataMiRNA['analysis'][name]['Label']);
+        }
+      }
+
+      for (let name in this.usersDataMiRNA['analysis']) {
+        this.casesMiRNA.push(name);
+        this.labelsMiRNA.push(this.usersDataMiRNA['analysis'][name]['Label']);
+      }
+
+      if (this.usersDataMiRNA['mirnas']) {
+        this.mirnaNames = this.usersDataMiRNA['mirnas'];
+      } else {
+        for (let key in this.usersDataMiRNA['isMapped']) {
+          this.mirnaNames.push(key);
+        }
+      }
+
+      this.processMiRNA();
+    }
+
     // localStorage.removeItem('metabolitics-data');
     // localStorage.removeItem('metabolitics-data-Metabolomics');
     // localStorage.removeItem('metabolitics-data-Transcriptomics');
+    // localStorage.removeItem('metabolitics-data-Proteomics');
+    // localStorage.removeItem('metabolitics-data-miRNA');
   }
 
   processTranscriptomics() {
@@ -229,9 +302,8 @@ export class ExcelComponent implements OnInit {
 
       // Get values for each case
       for (let j = 0; j < this.casesTranscriptomics.length; j++) {
-        // Backend now uses 'transcriptomes' key for Transcriptomics
         let val;
-        // Try accessing via 'transcriptomes' or fall back to 'Metabolites' if backend not delivering
+
         if (this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["transcriptomes"]) {
           val = this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["transcriptomes"][temp_gene_name];
         } else {
@@ -240,27 +312,18 @@ export class ExcelComponent implements OnInit {
         temp_list.push(val);
       }
 
-      // Backend now handles mapping, so we can trust the key (temp_gene_name) is already the mapped name if found
-      // But we need to format it nicely for display if it's mapped, or show unmapped if it is not found.
-
-      // The backend returns mapped keys like "GeneName - (UniprotID)" if mapped.
-      // We can check the 'isMapped' status from backend response.
 
       if (this.usersDataTranscriptomics['isMapped'] && this.usersDataTranscriptomics['isMapped'][temp_gene_name]) {
         const mappingInfo = this.usersDataTranscriptomics['isMapped'][temp_gene_name];
         if (mappingInfo['isMapped'] === false) {
-          temp_list.unshift("- (-)"); // Mark as unmapped for display if backend says so
+          temp_list.unshift("- (-)");
           this.unmappedTranscriptomics.push(temp_list);
         } else {
-          // It's mapped, and the key itself (temp_gene_name) is likely the mapped name from backend
           temp_list.unshift(temp_gene_name);
         }
       } else {
-        // Fallback if isMapped is missing
         temp_list.unshift(temp_gene_name);
       }
-
-      // Original Name (User provided) from 'metabol' key
       if (this.usersDataTranscriptomics['metabol'] && temp_gene_name in this.usersDataTranscriptomics['metabol']) {
         temp_list.unshift(this.usersDataTranscriptomics['metabol'][temp_gene_name]);
       } else {
@@ -268,6 +331,78 @@ export class ExcelComponent implements OnInit {
       }
 
       this.transcriptomicsFormatted.push(temp_list);
+    }
+  }
+
+  processProteomics() {
+    for (let i = 0; i < this.proteinNames.length; i++) {
+      let temp_list = new Array();
+      let temp_protein_name = this.proteinNames[i];
+
+      for (let j = 0; j < this.casesProteomics.length; j++) {
+        let val;
+        if (this.usersDataProteomics['analysis'][this.casesProteomics[j]]["proteins"]) {
+          val = this.usersDataProteomics['analysis'][this.casesProteomics[j]]["proteins"][temp_protein_name];
+        } else {
+          val = this.usersDataProteomics['analysis'][this.casesProteomics[j]]["metabolites"][temp_protein_name];
+        }
+        temp_list.push(val);
+      }
+
+      if (this.usersDataProteomics['isMapped'] && this.usersDataProteomics['isMapped'][temp_protein_name]) {
+        const mappingInfo = this.usersDataProteomics['isMapped'][temp_protein_name];
+        if (mappingInfo['isMapped'] === false) {
+          temp_list.unshift("- (-)");
+          this.unmappedProteomics.push(temp_list);
+        } else {
+          temp_list.unshift(temp_protein_name);
+        }
+      } else {
+        temp_list.unshift(temp_protein_name);
+      }
+
+      if (this.usersDataProteomics['metabol'] && temp_protein_name in this.usersDataProteomics['metabol']) {
+        temp_list.unshift(this.usersDataProteomics['metabol'][temp_protein_name]);
+      } else {
+        temp_list.unshift(temp_protein_name);
+      }
+      this.proteomicsFormatted.push(temp_list);
+    }
+  }
+
+  processMiRNA() {
+    for (let i = 0; i < this.mirnaNames.length; i++) {
+      let temp_list = new Array();
+      let temp_mirna_name = this.mirnaNames[i];
+
+      for (let j = 0; j < this.casesMiRNA.length; j++) {
+        let val;
+        if (this.usersDataMiRNA['analysis'][this.casesMiRNA[j]]["mirnas"]) {
+          val = this.usersDataMiRNA['analysis'][this.casesMiRNA[j]]["mirnas"][temp_mirna_name];
+        } else {
+          val = this.usersDataMiRNA['analysis'][this.casesMiRNA[j]]["metabolites"][temp_mirna_name];
+        }
+        temp_list.push(val);
+      }
+
+      if (this.usersDataMiRNA['isMapped'] && this.usersDataMiRNA['isMapped'][temp_mirna_name]) {
+        const mappingInfo = this.usersDataMiRNA['isMapped'][temp_mirna_name];
+        if (mappingInfo['isMapped'] === false) {
+          temp_list.unshift("- (-)");
+          this.unmappedMiRNA.push(temp_list);
+        } else {
+          temp_list.unshift(temp_mirna_name);
+        }
+      } else {
+        temp_list.unshift(temp_mirna_name);
+      }
+
+      if (this.usersDataMiRNA['metabol'] && temp_mirna_name in this.usersDataMiRNA['metabol']) {
+        temp_list.unshift(this.usersDataMiRNA['metabol'][temp_mirna_name]);
+      } else {
+        temp_list.unshift(temp_mirna_name);
+      }
+      this.mirnaFormatted.push(temp_list);
     }
   }
 
@@ -287,11 +422,21 @@ export class ExcelComponent implements OnInit {
       unmapped = this.unmappedMetabolites.length;
       labelMapped = 'Mapped Metabolites';
       labelUnmapped = 'Unmapped Metabolites';
-    } else {
+    } else if (this.activeTab === 'Transcriptomics') {
       mapped = this.transcriptomicsFormatted.length - this.unmappedTranscriptomics.length;
       unmapped = this.unmappedTranscriptomics.length;
       labelMapped = 'Mapped Genes';
       labelUnmapped = 'Unmapped Genes';
+    } else if (this.activeTab === 'Proteomics') {
+      mapped = this.proteomicsFormatted.length - this.unmappedProteomics.length;
+      unmapped = this.unmappedProteomics.length;
+      labelMapped = 'Mapped Proteins';
+      labelUnmapped = 'Unmapped Proteins';
+    } else if (this.activeTab === 'miRNAs') {
+      mapped = this.mirnaFormatted.length - this.unmappedMiRNA.length;
+      unmapped = this.unmappedMiRNA.length;
+      labelMapped = 'Mapped miRNAs';
+      labelUnmapped = 'Unmapped miRNAs';
     }
 
     var data = [{
@@ -375,6 +520,12 @@ export class ExcelComponent implements OnInit {
 
     const selectedMethod = this.selectedMethod;
 
+    if (!this.usersData2) {
+      this.notify.error('Error', 'Metabolomics data is required for analysis.');
+      return;
+    }
+
+    // 2. Update Public/Disease info on the payload
     if (this.login.isLoggedIn()) {
       this.usersData2['public'] = this.isPublic.value;
       this.usersData2['disease'] = this.myControl.value["id"];
@@ -384,60 +535,22 @@ export class ExcelComponent implements OnInit {
       this.usersData2['email'] = this.analyzeEmail.value;
     }
 
-    // Merge Transcriptomics if available
-    // Structure: usersData2['analysis'][caseName]['Metabolites'] (existing)
-    // Need to add: usersData2['analysis'][caseName]['transcriptomes'] ???
-    // 
-    // Wait, the API expects 'transcriptomes' key parallel to 'metabolites'?
-    // Looking at SubmitComponent:
-    // "analysis": { 
-    //     [name]: { 
-    //     "metabolites": _.fromPairs(this.metabolitesTable), 
-    //     "transcriptomes": _.fromPairs(this.transcriptomesTable),
-    //     "Label": "not_provided" } },
-
-    // In usersData2 (from Excel), it seems 'Metabolites' is the key used for values in the 'analysis' object.
-
-    if (this.usersDataTranscriptomics) {
+    // 3. Helper logic to merge specific omics data
+    const mergeOmics = (sourceData, targetKey) => {
+      if (!sourceData) return;
       for (let caseName in this.usersData2['analysis']) {
-        if (this.usersDataTranscriptomics['analysis'][caseName]) {
-          // We need to inject transcriptomes.
-          // Warning: The Excel parser (backend) should now set 'transcriptomes' key
-          if (this.usersDataTranscriptomics['analysis'][caseName]['transcriptomes']) {
-            this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersDataTranscriptomics['analysis'][caseName]['transcriptomes'];
-          } else {
-            // Fallback if backend used old key
-            this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersDataTranscriptomics['analysis'][caseName]['metabolites'];
-          }
+        if (sourceData['analysis'][caseName]) {
+          // Prefer specific key, fallback to 'metabolites' if legacy
+          const val = sourceData['analysis'][caseName][targetKey] || sourceData['analysis'][caseName]['metabolites'];
+          this.usersData2['analysis'][caseName][targetKey] = val;
         }
       }
-    }
+    };
 
-    // If no metabolomics but only transcriptomics?
-    // We initialized usersData2 from metabolomics. handling that edge case might be needed if user only uploads transcriptomics.
-    if (!this.usersData2 && this.usersDataTranscriptomics) {
-      this.usersData2 = this.usersDataTranscriptomics;
-      // Rename Metabolites to transcriptomes? or keep and let backend handle?
-      // Backend likely expects specific keys.
-      // Rename Metabolites to transcriptomes? or keep and let backend handle?
-      // Backend likely expects specific keys.
-      for (let caseName in this.usersData2['analysis']) {
-        if (!this.usersData2['analysis'][caseName]['transcriptomes'] && this.usersData2['analysis'][caseName]['metabolites']) {
-          this.usersData2['analysis'][caseName]['transcriptomes'] = this.usersData2['analysis'][caseName]['metabolites'];
-          delete this.usersData2['analysis'][caseName]['metabolites'];
-        }
-      }
-      if (this.login.isLoggedIn()) {
-        this.usersData2['public'] = this.isPublic.value;
-        this.usersData2['disease'] = this.myControl.value["id"];
-      } else {
-        this.usersData2['public'] = true;
-        this.usersData2['disease'] = this.myControl.value["id"];
-        this.usersData2['email'] = this.analyzeEmail.value;
-      }
-    }
-
-
+    // 4. Merge all types
+    mergeOmics(this.usersDataTranscriptomics, 'transcriptomes');
+    mergeOmics(this.usersDataProteomics, 'proteins');
+    mergeOmics(this.usersDataMiRNA, 'mirnas');
 
     if (selectedMethod === this.methods.Metabolitics) {
       this.metabolitics(this.usersData2);
@@ -450,7 +563,6 @@ export class ExcelComponent implements OnInit {
     }
 
   }
-
 
   metabolitics(data) {
 
@@ -480,7 +592,6 @@ export class ExcelComponent implements OnInit {
 
 
   }
-
 
   directPathwayMapping(data) {
 
@@ -549,8 +660,4 @@ export class ExcelComponent implements OnInit {
     }
 
   }
-
-
 }
-
-

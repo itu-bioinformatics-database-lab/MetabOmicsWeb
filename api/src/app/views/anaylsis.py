@@ -83,6 +83,7 @@ def fva_analysis():
         has_genes = any(study.get("transcriptomes") for study in data.get("analysis", {}).values())
 
         disease = Diseases.query.get(request.json['disease'])
+
         study = AnalysisMetadata(
             name=request.json['study_name'],
             analysis_method_id=1,
@@ -93,92 +94,103 @@ def fva_analysis():
         db.session.add(study)
         db.session.commit()
         analysis_id = 0
+
         healthy_metab_data = None
         healthy_gene_data = None
+        healthy_mirna_data = None
+        healthy_protein_data = None
+        X_t = None
         X_gene_scaled = None
+        X_mirna_scaled = None
+        X_protein_scaled = None
+        y = None
+
         for key,value in data['analysis'].items():
             if len(value['metabolites']) > 0:
                 if value['Label'] == data['group'].lower() + ' label avg':
-                    healthy_metab_data = value['metabolites']
-                    healthy_gene_data = value['transcriptomes']
 
+                    healthy_metab_data = {k: (v if v != 0 else sys.float_info.min) for k, v in value['metabolites'].items()}
+
+                    raw_genes = value.get('transcriptomes', {})
+                    healthy_gene_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_genes.items()} if raw_genes else None
+
+                    raw_mirna = value.get('mirnas', {})
+                    healthy_mirna_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_mirna.items()} if raw_mirna else None
+
+                    raw_proteins = value.get('proteins', {})
+                    healthy_protein_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_proteins.items()} if raw_proteins else None
 
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
-            current_metabolites = value["metabolites"]
-            current_genes = value["transcriptomes"]
-            if len(current_metabolites) > 0:
+            if len(value['metabolites']) > 0:
+                for k, v in value['metabolites'].items():
+                    if v == 0: value['metabolites'][k] = sys.float_info.min
                 if healthy_metab_data != None:
-                    # 1. Handle zeros for current Metabolites
-                    for k, v in current_metabolites.items():
-                        current_metabolites[k] = v if v != 0 else sys.float_info.min
-                    # 2. Handle zeros for healthy Metabolites
-                    for k, v in healthy_metab_data.items():
-                        healthy_metab_data[k] = v if v != 0 else sys.float_info.min
                     metab_pipe = MetaboliticsPipeline(['fold-change-scaler'])
-                    # Calculate scaled metabolites (X_t)
-                    X_t = metab_pipe.fit_transform([current_metabolites, healthy_metab_data], [value['Label'], 'healthy'])[0]
+                    X_t = metab_pipe.fit_transform([value['metabolites'], healthy_metab_data], [value['Label'], 'healthy'])[0]
 
-                    
-                    # Check if Gene baseline and current Gene data are available
-                    if healthy_gene_data is not None and len(current_genes) > 0:
+                    current_genes = value.get('transcriptomes', {})
+                    if healthy_gene_data and current_genes:
+                        cleaned_genes = {k: (v if v != 0 else sys.float_info.min) for k, v in current_genes.items()}
                         gene_pipe = MetaboliticsPipeline(['fold-change-scaler'])
+                        X_gene_scaled = gene_pipe.fit_transform([cleaned_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
                         
-                        # Handle zeros for Genes
-                        for k, v in current_genes.items():
-                            current_genes[k] = v if v != 0 else sys.float_info.min
-                        for k, v in healthy_gene_data.items():
-                            healthy_gene_data[k] = v if v != 0 else sys.float_info.min
-                        
-                        # Calculate scaled genes
-                        X_gene_scaled = gene_pipe.fit_transform([current_genes, healthy_gene_data], [value['Label'], 'healthy'])[0]
+                    current_mirnas = value.get('miRNAs', {})
+                    if healthy_mirna_data and current_mirnas:
+                        cleaned_mirnas = {k: (v if v != 0 else sys.float_info.min) for k, v in current_mirnas.items()}
+                        mirna_pipe = MetaboliticsPipeline(['fold-change-scaler'])
+                        X_mirna_scaled = mirna_pipe.fit_transform([cleaned_mirnas, healthy_mirna_data], [value['Label'], 'healthy'])[0]
 
+                    current_prots = value.get('proteins', {})
+                    if healthy_protein_data and current_prots:
+                        cleaned_prots = {k: (v if v != 0 else sys.float_info.min) for k, v in current_prots.items()}
+                        prot_pipe = MetaboliticsPipeline(['fold-change-scaler'])
+                        X_protein_scaled = prot_pipe.fit_transform([cleaned_prots, healthy_protein_data], [value['Label'], 'healthy'])[0]
+                
                 metabolite_data = OmicsDatasets(
                     omics_type = "metabolite",
                     omics_data= value["metabolites"] if healthy_metab_data == None else X_t,
                     owner_email = str(user),
-                    is_public = True if request.json['public'] else False
+                    is_public = bool(request.json.get('public')),
+                    disease_id = disease.id,
+                    disease = disease
                 )
-
-                transcriptome_data = None
-
-                if(X_gene_scaled is not None):
-                    transcriptome_data = OmicsDatasets(
-                        omics_type = "transcriptome",
-                        omics_data = current_genes if healthy_gene_data == None else X_gene_scaled,
-                        owner_email = str(user),
-                        is_public = True if request.json['public'] else False
-                    )
-
-                metabolite_data.disease_id = disease.id
-                metabolite_data.disease = disease
                 db.session.add(metabolite_data)
-                if( transcriptome_data is not None):
-                    transcriptome_data.disease_id = disease.id
-                    transcriptome_data.disease = disease
-                    db.session.add(transcriptome_data)
+
+                transcriptome_obj = create_omics_entry(X_gene_scaled, "transcriptome")
+                mirna_obj = create_omics_entry(X_mirna_scaled, "miRNA")
+                protein_obj = create_omics_entry(X_protein_scaled, "protein")
                 db.session.commit()
-
-
+                
                 analysis = Analyses(name=key, user=user)
                 analysis.label = value['Label']
                 analysis.name = key
-                analysis.type = 'public' if request.json['public'] else "private"
-
+                analysis.type = 'public' if request.json.get('public') else 'private'
                 analysis.owner_user_id = user.id
                 analysis.owner_email = user.email
-                if( transcriptome_data is not None):
-                    analysis.omics_data_id = [metabolite_data.id, transcriptome_data.id]
-                else:
-                    analysis.omics_data_id = [metabolite_data.id]
                 analysis.dataset_id = study.id
+
+                current_omics_ids = [metabolite_data.id]
+                if transcriptome_obj: current_omics_ids.append(transcriptome_obj.id)
+                if mirna_obj: current_omics_ids.append(mirna_obj.id)
+                if protein_obj: current_omics_ids.append(protein_obj.id)
+
+                analysis.omics_data_id = current_omics_ids
+
                 db.session.add(analysis)
                 db.session.commit()
-                save_analysis.delay(analysis.id, value["metabolites"] if healthy_metab_data is None else X_t, gene_changes=None if healthy_gene_data is None else X_gene_scaled)
+
+                save_analysis.delay(
+                    analysis.id, 
+                    X_t if healthy_metab_data != None else value["metabolites"], 
+                    gene_changes=X_gene_scaled, 
+                    miRNAs=X_mirna_scaled, 
+                    proteins=X_protein_scaled, 
+                    y=value['Label']
+                    )
+
                 analysis_id = analysis.id
 
         return jsonify({'id': analysis_id})
-
-
 
 ###############
 
@@ -1153,14 +1165,26 @@ def checkMapped(data):
         for case in data['analysis'].keys():
             temp = {}
             metabolites = data['analysis'][case]['metabolites']
+            transcriptomes = data['analysis'][case].get('transcriptomes', {})
+            miRNAs = data['analysis'][case].get('miRNAs', {})
+            proteins = data['analysis'][case].get('proteins', {})
             label = data['analysis'][case]['Label']
-            temp['transcriptomes'] = data['analysis'][case].get('transcriptomes', {})
             temp['Label'] = label
             temp.setdefault('metabolites', {})
 
+            for i in transcriptomes.keys():
+                if i in isMapped and isMapped[i]['isMapped'] is True:
+                    temp['transcriptomes'][i] = transcriptomes[i]
+            for i in miRNAs.keys():
+                if i in isMapped and isMapped[i]['isMapped'] is True:
+                    temp['miRNAs'][i] = miRNAs[i]
+            for i in proteins.keys():
+                if i in isMapped and isMapped[i]['isMapped'] is True:
+                    temp['proteins'][i] = proteins[i]
             for i in metabolites.keys():
                 if i in isMapped and isMapped[i]['isMapped'] is True:
                     temp['metabolites'][i] = metabolites[i]
+            
             # print(len(temp['metabolites']))
             if len(temp['metabolites']) > 0:
                 output['analysis'][case] = temp
@@ -1190,6 +1214,8 @@ def checkMapped(data):
             metabolites = data['analysis'][case]['metabolites']
             label = data['analysis'][case]['Label']
             temp['transcriptomes'] = data['analysis'][case].get('transcriptomes', {})
+            temp['miRNAs'] = data['analysis'][case].get('miRNAs', {})
+            temp['proteins'] = data['analysis'][case].get('proteins', {})
             temp['Label'] = label
             temp.setdefault('metabolites', {})
 
@@ -1260,3 +1286,17 @@ def delete_analysis():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+def create_omics_entry(data, o_type):
+    if data is not None:
+        entry = OmicsDatasets(
+            omics_type=o_type,
+            omics_data=data,
+            owner_email=str(user.email),
+            is_public=bool(request.json.get('public')),
+            disease_id=disease.id,
+            disease=disease
+        )
+        db.session.add(entry)
+        return entry
+    return None

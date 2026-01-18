@@ -1,4 +1,4 @@
-FROM python:3.8-slim-bullseye
+FROM python:3.9-slim-bullseye
 
 # --- 1. SYSTEM SETUP (Rarely Changes) ---
 ENV JAVA_HOME=/opt/java/openjdk
@@ -22,7 +22,30 @@ RUN apt-get update && \
         git \
     && rm -rf /var/lib/apt/lists/*
 
-# --- 2. PYTHON DEPENDENCIES (Changes occasionally) ---
+    # --- 2. CPLEX INSTALLATION (Registered Version) ---
+# We do this BEFORE python requirements so the engine is ready.
+
+# Define arguments for flexibility
+ARG CPLEX_INSTALLER=cplex_studio2211.linux_x86_64.bin
+ARG CPLEX_HOME=/opt/ibm/ILOG/CPLEX_Studio
+
+# Copy installer and silent config
+COPY ${CPLEX_INSTALLER} /tmp/cplex_installer.bin
+COPY response.properties /tmp/response.properties
+
+# Run the installer
+RUN chmod +x /tmp/cplex_installer.bin && \
+    /tmp/cplex_installer.bin -f /tmp/response.properties && \
+    rm /tmp/cplex_installer.bin /tmp/response.properties
+
+# Install the CPLEX Python API into the system python
+WORKDIR ${CPLEX_HOME}/python
+RUN python setup.py install
+
+# CRITICAL: Set LD_LIBRARY_PATH so Python can find the CPLEX C++ binaries at runtime
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${CPLEX_HOME}/cplex/bin/x86-64_linux"
+
+# --- 3. PYTHON DEPENDENCIES (Changes occasionally) ---
 WORKDIR /app
 
 # Install uv
@@ -35,11 +58,11 @@ COPY requirements.txt .
 # Install dependencies using uv (Fast & Cached)
 RUN uv pip install --system --no-cache -r requirements.txt
 
-# --- 3. SOURCE CODE (Changes frequently) ---
+# --- 4. SOURCE CODE (Changes frequently) ---
 # Copy source code LAST. Changing code will only re-run steps after this line.
 COPY . /app
 
-# --- 4. RUNTIME ---
+# --- 5. RUNTIME ---
 # Ensure we are in the correct directory for gunicorn
 WORKDIR /app/src
 

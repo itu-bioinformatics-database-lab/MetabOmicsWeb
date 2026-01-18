@@ -56,7 +56,8 @@
 <div class="row" *ngIf="shouldShowDiffusionError()">
   <div class="col-md-12">
     <div class="alert alert-warning" style="margin-top: 10px;">
-      <strong>Warning:</strong> With Linear Threshold, you can only use Metabolitics method!
+      <strong>Warning:</strong> With Linear Threshold, you can only use Metabolitics method! <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;To use other methods, only upload Metabolomics omics data.
     </div>
   </div>
 </div>
@@ -77,16 +78,16 @@
           [tConTable]="uploadService.tConTable" [unmappedTranscriptomics]="unmappedTranscriptomics" [currentOmics]="omics.type">
         </concentration-table>
         <concentration-table *ngIf="omics.type === 'Proteomics'"
-          [pConTable]="uploadService.pConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+          [pConTable]="uploadService.pConTable" [unmappedProteomics]="unmappedProteomics" [currentOmics]="omics.type">
         </concentration-table>
-        <concentration-table *ngIf="omics.type === 'miRNA'"
-          [mrConTable]="uploadService.mrConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+        <concentration-table *ngIf="omics.type === 'miRNAs'"
+          [mrConTable]="uploadService.mrConTable" [unmappedMiRNAs]="unmappedMiRNAs" [currentOmics]="omics.type">
         </concentration-table>
         <concentration-table *ngIf="omics.type === 'Genomic Variants'"
-          [gvConTable]="uploadService.gvConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+          [gvConTable]="uploadService.gvConTable" [unmappedGenomicVariants]="unmappedGenomicVariants" [currentOmics]="omics.type">
         </concentration-table>
         <concentration-table *ngIf="omics.type === 'Epigenomics'"
-          [epConTable]="uploadService.epConTable" [unmappedMetabolites]="unmappedMetabolites" [currentOmics]="omics.type">
+          [epConTable]="uploadService.epConTable" [unmappedEpigenomics]="unmappedEpigenomics" [currentOmics]="omics.type">
         </concentration-table>
       </mat-card-content>
     </mat-card>

@@ -141,15 +141,18 @@ def healties_model():
         'naming-toy', 
         # 'fold-change-scaler',
     ])
+    print('-----------------------------------')
     X_t = pipe.fit_transform(X, y)
-
+    X_tr = pipe.fit_transform(X_tr, y_tr)
+    print(X_tr)
+    print('-----------------------------------')
     metabolitics_transformer = MetaboliticsTransformer()
 
     X_train_transformed = metabolitics_transformer.transform(
     X=X_t, X_tr=X_tr)
-
+    print(X_train_transformed)
     model = MetaboliticsPipeline([
-        ('reaction-diff', ReactionDiffTransformer())
+        'reaction-diff'
     ])
     # model = MetaboliticsPipeline([
     #     'metabolitics-transformer',

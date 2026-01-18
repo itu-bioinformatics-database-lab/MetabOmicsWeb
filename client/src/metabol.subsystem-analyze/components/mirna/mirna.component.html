@@ -10,7 +10,7 @@
       <div class="form-group">
         <label class="control-label">CSV Format:</label>
         <div class="input-group">
-          <input type="file" class="form-control" (change)="uploadService.csvChange($event, 'miRNA')" accept=".csv">
+          <input type="file" class="form-control" (change)="uploadService.csvChange($event, 'miRNAs')" accept=".csv">
           <span class="file-info">Upload miRNA expression data in CSV format</span>
         </div>
       </div>
@@ -18,7 +18,7 @@
       <div class="form-group">
         <label class="control-label">JSON Format:</label>
         <div class="input-group">
-          <input type="file" class="form-control" (change)="uploadService.jsonChange($event, 'miRNA')" accept=".json">
+          <input type="file" class="form-control" (change)="uploadService.jsonChange($event, 'miRNAs')" accept=".json">
           <span class="file-info">Upload miRNA expression data in JSON format</span>
         </div>
       </div>
@@ -47,7 +47,7 @@
   </div>
 
   <div class="actions">
-    <button class="btn btn-primary" (click)="uploadService.proceed('miRNA')" [disabled]="!uploadService.canProceed('miRNA')">
+    <button class="btn btn-primary" (click)="uploadService.proceed('miRNAs')" [disabled]="!uploadService.canProceed('miRNAs')">
       {{ uploadService.getContinueButton() }}
     </button>
   </div>

@@ -27,9 +27,8 @@ WTForms==2.3.3
 
 # --- 2. SCIENTIFIC & METABOLOMIC CORE ---
 cobra==0.29.0
-cplex==22.1.0
 swiglpk>=5.0.8
-metabOmics==0.1.22
+metabOmics==0.1.31
 cameo>=0.13.0          # UPDATED: Solves the 'cobra<=0.5.11' conflict
 Escher>=1.8.0
 optlang==1.8.1
@@ -53,7 +52,7 @@ joblib==1.1.0
 cycler==0.10.0
 dill==0.2.5
 mpmath==1.1.0
-numexpr==2.7.1
+numexpr>=2.7.3
 patsy==0.5.2
 PyFunctional==1.2.0
 

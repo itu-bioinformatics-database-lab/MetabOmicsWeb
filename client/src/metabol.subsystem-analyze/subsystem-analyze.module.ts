@@ -4,11 +4,11 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MatRippleModule } from '@angular/material';
 import { FileSelectDirective } from 'ng2-file-upload';
-import { MatFormFieldModule, MatInputModule , MatSelectModule } from '@angular/material';
-import {MatTableModule} from '@angular/material/table';
+import { MatFormFieldModule, MatInputModule, MatSelectModule } from '@angular/material';
+import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material';
-import { MatAutocompleteModule} from '@angular/material/autocomplete';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import {
@@ -25,14 +25,12 @@ import { subsystemAnalyzeRouting } from './subsystem-analyze.routes';
 import { OmicsSelectionService } from './services/omics-selection.service';
 
 import { MetabolCommonModule } from '../metabol.common';
-import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetabolomicsComponent } from './components/metabolomics/metabolomics.component';
 import { TranscriptomicsComponent } from './components/transcriptomics/transcriptomics.component';
 import { MetabolomicsMeasurementComponent } from './components/metabolomics-measurement/metabolomics-measurement.component';
 import { ProteomicsComponent } from './components/proteomics/proteomics.component';
-import { ProteomicsUploadComponent } from './components/proteomics-upload/proteomics-upload.component';
 import { MirnaComponent } from './components/mirna/mirna.component';
-import { MirnaUploadComponent } from './components/mirna-upload/mirna-upload.component';
 import { SubmitComponent } from './components/submit/submit.component';
 
 @NgModule({
@@ -48,9 +46,7 @@ import { SubmitComponent } from './components/submit/submit.component';
     MetabolomicsMeasurementComponent,
     TranscriptomicsComponent,
     ProteomicsComponent,
-    ProteomicsUploadComponent,
     MirnaComponent,
-    MirnaUploadComponent,
     SubmitComponent
   ],
   imports: [

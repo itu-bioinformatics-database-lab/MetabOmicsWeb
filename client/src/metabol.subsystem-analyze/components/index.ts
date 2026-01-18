@@ -19,5 +19,3 @@ export * from './mirna/mirna.component';
 export * from './metabolomics-measurement/metabolomics-measurement.component';
 
 // Upload components
-export * from './proteomics-upload/proteomics-upload.component';
-export * from './mirna-upload/mirna-upload.component';

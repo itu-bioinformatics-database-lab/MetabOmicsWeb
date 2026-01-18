@@ -32,6 +32,8 @@ export class SubmitComponent implements OnInit {
   myControl = new FormControl();
   metabolitesTable: Array<[string, number]> = [];
   transcriptomesTable: Array<[string, number]> = [];
+  proteomicsTable: Array<[string, number]> = [];
+  miRNATable: Array<[string, number]> = [];
   previewTable: Array<[string, string, number]> = [];
   public synonymList: [] = synonyms;
   diseases: Disease[] = [];
@@ -50,6 +52,8 @@ export class SubmitComponent implements OnInit {
 
   mConTable = this.uploadService.mConTable;
   tConTable = this.uploadService.tConTable;
+  pConTable = this.uploadService.pConTable;
+  mrConTable = this.uploadService.mrConTable;
 
   comboboxMethods: Array<object> = [
     { id: 0, name: "Metabolitics" },
@@ -122,6 +126,22 @@ export class SubmitComponent implements OnInit {
         }
       });
     }
+
+    if (this.hasProteomicsSelected()) {
+      this.pConTable.forEach(protein => {
+        if (protein[4]) {
+          this.proteomicsTable.push([protein[2], protein[1]]);
+        }
+      });
+    }
+
+    if (this.hasmiRNASSElected()) {
+      this.mrConTable.forEach(mirna => {
+        if (mirna[4]) {
+          this.miRNATable.push([mirna[2], mirna[1]]);
+        }
+      });
+    }
     let data = {}
     if (localStorage.getItem('isMultiple') == 'True') {
 
@@ -139,6 +159,8 @@ export class SubmitComponent implements OnInit {
             [name]: {
               "metabolites": _.fromPairs(this.metabolitesTable),
               "transcriptomes": _.fromPairs(this.transcriptomesTable),
+              "proteins": _.fromPairs(this.proteomicsTable),
+              "miRNAs": _.fromPairs(this.miRNATable),
               "Label": "not_provided"
             }
           },
@@ -156,6 +178,8 @@ export class SubmitComponent implements OnInit {
             [name]: {
               "metabolites": _.fromPairs(this.metabolitesTable),
               "transcriptomes": _.fromPairs(this.transcriptomesTable),
+              "proteins": _.fromPairs(this.proteomicsTable),
+              "miRNAs": _.fromPairs(this.miRNATable),
               "Label": "not_provided"
             }
           },
@@ -274,7 +298,12 @@ export class SubmitComponent implements OnInit {
   hasTranscriptomicsSelected(): boolean {
     return this.omicsArray.some(o => o.type === 'Transcriptomics');
   }
-
+  hasProteomicsSelected(): boolean {
+    return this.omicsArray.some(o => o.type === 'Proteomics');
+  }
+  hasmiRNASSElected(): boolean {
+    return this.omicsArray.some(o => o.type === 'miRNAs');
+  }
   // Helpers adapted for submit view (derived from concentration-table helpers)
   private getActiveOmicsType(): string {
     const byTab = this.omicsArray && this.omicsArray[this.selectedTabIndex]
@@ -287,7 +316,7 @@ export class SubmitComponent implements OnInit {
     switch (this.getActiveOmicsType()) {
       case 'Transcriptomics': return 'Number of Mapped Genes';
       case 'Proteomics': return 'Number of Mapped Proteins';
-      case 'miRNA': return 'Number of Mapped miRNAs';
+      case 'miRNAs': return 'Number of Mapped miRNAs';
       case 'Genomic Variants': return 'Number of Mapped Variants';
       case 'Epigenomics': return 'Number of Mapped Epigenomic Features';
       default: return 'Number of Mapped Metabolites';
@@ -304,7 +333,7 @@ export class SubmitComponent implements OnInit {
       case 'Metabolomics': activeTable = this.uploadService.mConTable; break;
       case 'Transcriptomics': activeTable = this.uploadService.tConTable; break;
       case 'Proteomics': activeTable = this.uploadService.pConTable; break;
-      case 'miRNA': activeTable = this.uploadService.mrConTable; break;
+      case 'miRNAs': activeTable = this.uploadService.mrConTable; break;
       case 'Genomic Variants': activeTable = this.uploadService.gvConTable; break;
       case 'Epigenomics': activeTable = this.uploadService.epConTable; break;
       default: return 0;
@@ -319,7 +348,7 @@ export class SubmitComponent implements OnInit {
     switch (this.getActiveOmicsType()) {
       case 'Transcriptomics': return 'Genes';
       case 'Proteomics': return 'Proteins';
-      case 'miRNA': return 'miRNAs';
+      case 'miRNAs': return 'miRNAs';
       case 'Genomic Variants': return 'Variants';
       case 'Epigenomics': return 'Epigenomic Features';
       default: return 'Metabolites';
@@ -336,7 +365,7 @@ export class SubmitComponent implements OnInit {
       case 'Metabolomics': activeTable = this.uploadService.mConTable; break;
       case 'Transcriptomics': activeTable = this.uploadService.tConTable; break;
       case 'Proteomics': activeTable = this.uploadService.pConTable; break;
-      case 'miRNA': activeTable = this.uploadService.mrConTable; break;
+      case 'miRNAs': activeTable = this.uploadService.mrConTable; break;
       case 'Genomic Variants': activeTable = this.uploadService.gvConTable; break;
       case 'Epigenomics': activeTable = this.uploadService.epConTable; break;
       default: return 0;
@@ -350,7 +379,7 @@ export class SubmitComponent implements OnInit {
       case 'Metabolomics': return 'Metabolite List';
       case 'Transcriptomics': return 'Transcriptome List';
       case 'Proteomics': return 'Proteome List';
-      case 'miRNA': return 'miRNA List';
+      case 'miRNAs': return 'miRNA List';
       case 'Genomic Variants': return 'Genomic Variants List';
       case 'Epigenomics': return 'Epigenomic Features List';
     }
@@ -379,7 +408,7 @@ export class SubmitComponent implements OnInit {
       case 'Metabolomics': return 'Metabolite Name';
       case 'Transcriptomics': return 'Gene Name';
       case 'Proteomics': return 'Protein Name';
-      case 'miRNA': return 'miRNA Name';
+      case 'miRNAs': return 'miRNA Name';
       case 'Genomic Variants': return 'Variant Name';
       case 'Epigenomics': return 'Epigenomic Feature Name';
     }

@@ -64,6 +64,12 @@
     <li [class.active]="activeTab === 'Transcriptomics'" style="cursor: pointer;" *ngIf="usersDataTranscriptomics">
       <a (click)="setActiveTab('Transcriptomics')">Transcriptomics Data</a>
     </li>
+    <li [class.active]="activeTab === 'Proteomics'" style="cursor: pointer;" *ngIf="usersDataProteomics">
+      <a (click)="setActiveTab('Proteomics')">Proteomics Data</a>
+    </li>
+    <li [class.active]="activeTab === 'miRNAs'" style="cursor: pointer;" *ngIf="usersDataMiRNA">
+      <a (click)="setActiveTab('miRNAs')">miRNA Data</a>
+    </li>
   </ul>
 </div>
 
@@ -85,6 +91,14 @@
     <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;" *ngIf="activeTab === 'Transcriptomics'">
       <p>Number of Mapped Genes: {{transcriptomicsFormatted.length - unmappedTranscriptomics.length}}</p>
       <p>Number of Unmapped Genes: {{unmappedTranscriptomics.length}}</p>
+    </blockquote>
+    <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;" *ngIf="activeTab === 'Proteomics'">
+      <p>Number of Mapped Proteins: {{proteomicsFormatted.length - unmappedProteomics.length}}</p>
+      <p>Number of Unmapped Proteins: {{unmappedProteomics.length}}</p>
+    </blockquote>
+    <blockquote class="blockquote" style="padding: 10px; margin-left:10px; margin-right: 10px;" *ngIf="activeTab === 'miRNAs'">
+      <p>Number of Mapped miRNAs: {{mirnaFormatted.length - unmappedMiRNA.length}}</p>
+      <p>Number of Unmapped miRNAs: {{unmappedMiRNA.length}}</p>
     </blockquote>
   </div>
   
