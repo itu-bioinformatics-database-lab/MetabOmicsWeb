@@ -31,9 +31,6 @@ def excel():
         if d != [] and d[0] != None:
             metabolites.append(d[0])
             
-    if omics_type == 'Metabolomics':
-        enhance_synonyms(metabolites)
-        
     meta = request.json['meta']
     processed_data = excel_data_Prpcessing(data, meta, omics_type)
     new_data = group_avg(processed_data, omics_type=omics_type)
@@ -41,13 +38,16 @@ def excel():
         processed_data['analysis'][k] = v
     # processed_data['analysis']
     #print (processed_data)
-    
+
+    if omics_type == 'Metabolomics':
+        enhance_synonyms(metabolites)
+        processed_data['metabolites'] = metabolites
     elif omics_type == 'Transcriptomics':
-        processed_data['transcriptomes'] = metabolites
+        processed_data['transcriptomes'] = list(processed_data['metabol'].keys())
     elif omics_type == 'Proteomics':
-        processed_data['proteins'] = metabolites
+        processed_data['proteins'] = list(processed_data['metabol'].keys())
     elif omics_type == 'miRNA':
-        processed_data['miRNAs'] = metabolites
+        processed_data['miRNAs'] = list(processed_data['metabol'].keys())
     else:
         processed_data['metabolites'] = metabolites
         

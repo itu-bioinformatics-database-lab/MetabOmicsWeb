@@ -306,13 +306,9 @@ export class ExcelComponent implements OnInit {
 
         if (this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["transcriptomes"]) {
           val = this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["transcriptomes"][temp_gene_name];
-        } else {
-          val = this.usersDataTranscriptomics['analysis'][this.casesTranscriptomics[j]]["metabolites"][temp_gene_name];
         }
         temp_list.push(val);
       }
-
-
       if (this.usersDataTranscriptomics['isMapped'] && this.usersDataTranscriptomics['isMapped'][temp_gene_name]) {
         const mappingInfo = this.usersDataTranscriptomics['isMapped'][temp_gene_name];
         if (mappingInfo['isMapped'] === false) {
@@ -547,10 +543,35 @@ export class ExcelComponent implements OnInit {
       }
     };
 
+    // Merge isMapped dictionaries from all omics types
+    if (this.usersData2['isMapped']) {
+      if (this.usersDataTranscriptomics && this.usersDataTranscriptomics['isMapped']) {
+        Object.assign(this.usersData2['isMapped'], this.usersDataTranscriptomics['isMapped']);
+      }
+      if (this.usersDataProteomics && this.usersDataProteomics['isMapped']) {
+        Object.assign(this.usersData2['isMapped'], this.usersDataProteomics['isMapped']);
+      }
+      if (this.usersDataMiRNA && this.usersDataMiRNA['isMapped']) {
+        Object.assign(this.usersData2['isMapped'], this.usersDataMiRNA['isMapped']);
+      }
+    }
+
     // 4. Merge all types
     mergeOmics(this.usersDataTranscriptomics, 'transcriptomes');
     mergeOmics(this.usersDataProteomics, 'proteins');
-    mergeOmics(this.usersDataMiRNA, 'mirnas');
+    mergeOmics(this.usersDataMiRNA, 'miRNAs');
+
+    // Populate root keys for Public Analysis (backend expectation)
+    // Sending as List of strings (IDs/Names) as requested
+    if (this.usersDataTranscriptomics && this.usersDataTranscriptomics['transcriptomes']) {
+      this.usersData2['transcriptomes'] = this.usersDataTranscriptomics['transcriptomes'];
+    }
+    if (this.usersDataProteomics && this.usersDataProteomics['proteins']) {
+      this.usersData2['proteins'] = this.usersDataProteomics['proteins'];
+    }
+    if (this.usersDataMiRNA && this.usersDataMiRNA['mirnas']) {
+      this.usersData2['miRNAs'] = this.usersDataMiRNA['mirnas'];
+    }
 
     if (selectedMethod === this.methods.Metabolitics) {
       this.metabolitics(this.usersData2);

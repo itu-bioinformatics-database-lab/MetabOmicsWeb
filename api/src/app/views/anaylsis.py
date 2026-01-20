@@ -156,9 +156,9 @@ def fva_analysis():
                 )
                 db.session.add(metabolite_data)
 
-                transcriptome_obj = create_omics_entry(X_gene_scaled, "transcriptome")
-                mirna_obj = create_omics_entry(X_mirna_scaled, "miRNA")
-                protein_obj = create_omics_entry(X_protein_scaled, "protein")
+                transcriptome_obj = create_omics_entry(X_gene_scaled, "transcriptome", user, disease, bool(request.json.get('public')))
+                mirna_obj = create_omics_entry(X_mirna_scaled, "miRNA", user, disease, bool(request.json.get('public')))
+                protein_obj = create_omics_entry(X_protein_scaled, "protein", user, disease, bool(request.json.get('public')))
                 db.session.commit()
                 
                 analysis = Analyses(name=key, user=user)
@@ -1171,6 +1171,9 @@ def checkMapped(data):
             label = data['analysis'][case]['Label']
             temp['Label'] = label
             temp.setdefault('metabolites', {})
+            temp.setdefault('transcriptomes', {})
+            temp.setdefault('miRNAs', {})
+            temp.setdefault('proteins', {})
 
             for i in transcriptomes.keys():
                 if i in isMapped and isMapped[i]['isMapped'] is True:
@@ -1287,13 +1290,13 @@ def delete_analysis():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-def create_omics_entry(data, o_type):
+def create_omics_entry(data, o_type, user, disease, is_public):
     if data is not None:
         entry = OmicsDatasets(
             omics_type=o_type,
             omics_data=data,
             owner_email=str(user.email),
-            is_public=bool(request.json.get('public')),
+            is_public=is_public,
             disease_id=disease.id,
             disease=disease
         )
