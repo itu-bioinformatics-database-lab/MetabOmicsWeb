@@ -1,19 +1,19 @@
-import { Injectable, OnDestroy } from '@angular/core';
-import { AppDataLoader } from '../../../metabol.common/services/data-loader/data-loader.service';
-import { HttpClient } from '@angular/common/http';
-import { Router, NavigationStart } from '@angular/router';
-import { NotificationsService } from 'angular2-notifications';
-import { OmicsData, OmicsSelectionService } from '../omics-selection.service';
-import * as XLSX from 'xlsx';
-import * as LZString from 'lz-string';
-import { AppSettings } from '../../../app/';
-import graph from '../../../assets/datasets/universalGraph_new.json';
-import synonyms from '../../../assets/datasets/synonyms_latest.json';
-import uniprot_synonym_mapping from '../../../assets/datasets/uniprot_synonym_mapping.json';
-import { Subscription } from 'rxjs';
+import { Injectable, OnDestroy } from "@angular/core";
+import { AppDataLoader } from "../../../metabol.common/services/data-loader/data-loader.service";
+import { HttpClient } from "@angular/common/http";
+import { Router, NavigationStart } from "@angular/router";
+import { NotificationsService } from "angular2-notifications";
+import { OmicsData, OmicsSelectionService } from "../omics-selection.service";
+import * as XLSX from "xlsx";
+import * as LZString from "lz-string";
+import { AppSettings } from "../../../app/";
+import graph from "../../../assets/datasets/universalGraph_new.json";
+import synonyms from "../../../assets/datasets/synonyms_latest.json";
+import uniprot_synonym_mapping from "../../../assets/datasets/uniprot_synonym_mapping.json";
+import { Subscription } from "rxjs";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class UploadService implements OnDestroy {
   // Vector to track selected omics types in order
@@ -29,13 +29,24 @@ export class UploadService implements OnDestroy {
   // miRNA con table
   mrConTable: Array<[string, number, string, string, boolean]> = [];
   // genomic variants con table
-  gvConTable: Array<[string, number, string, string, boolean]> = [];
+  gvConTable: [
+    string,
+    number,
+    string,
+    string,
+    boolean,
+    {
+      clinical_sig: string;
+      consequence: string;
+      location: string;
+    }
+  ][] = [];
   // epigenomics con table
   epConTable: Array<[string, number, string, string, boolean]> = [];
   file: any;
   analysisTable: Array<[string, number, string, string]> = [];
   public synonymList: [] = synonyms;
-  selected = 'Combined.json';
+  selected = "Combined.json";
   temp: JSON;
   temp2;
   data;
@@ -57,10 +68,14 @@ export class UploadService implements OnDestroy {
     private omicsService: OmicsSelectionService
   ) {
     // Subscribe to router events to clear tables on navigation
-    this.routerSubscription = this.router.events.subscribe(event => {
+    this.routerSubscription = this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
         // Clear tables when navigating to welcome or from header navigation
-        if (event.url.startsWith('/analyze/welcome') || event.url === '/analyze') {  // When clicking Analyze in header
+        if (
+          event.url.startsWith("/analyze/welcome") ||
+          event.url === "/analyze"
+        ) {
+          // When clicking Analyze in header
           this.clearTables();
         }
       }
@@ -68,7 +83,7 @@ export class UploadService implements OnDestroy {
 
     // Handle page refresh
     this.beforeUnloadHandler = () => this.clearTables();
-    window.addEventListener('beforeunload', this.beforeUnloadHandler);
+    window.addEventListener("beforeunload", this.beforeUnloadHandler);
   }
 
   // Initialize omics vector from selected omics
@@ -76,14 +91,14 @@ export class UploadService implements OnDestroy {
     const selectedOmics = this.omicsService.getSelectedOmicsArray();
 
     if (selectedOmics && selectedOmics.length > 0) {
-      this.omicsVector = selectedOmics.map(omics => omics.type);
+      this.omicsVector = selectedOmics.map((omics) => omics.type);
       this.currentOmicsIndex = 0;
     }
   }
 
   // Get current omics type from vector
   getCurrentOmicsType(): string {
-    return this.omicsVector[this.currentOmicsIndex] || '';
+    return this.omicsVector[this.currentOmicsIndex] || "";
   }
 
   // Move to next omics type
@@ -115,26 +130,26 @@ export class UploadService implements OnDestroy {
   // Navigate to specific omics type
   navigateToOmicsType(omicsType: string) {
     switch (omicsType) {
-      case 'Metabolomics':
-        this.router.navigate(['/analyze/metabolomics-measurement']);
+      case "Metabolomics":
+        this.router.navigate(["/analyze/metabolomics-measurement"]);
         break;
-      case 'Transcriptomics':
-        this.router.navigate(['/analyze/transcriptomics']);
+      case "Transcriptomics":
+        this.router.navigate(["/analyze/transcriptomics"]);
         break;
-      case 'Proteomics':
-        this.router.navigate(['/analyze/proteomics']);
+      case "Proteomics":
+        this.router.navigate(["/analyze/proteomics"]);
         break;
-      case 'miRNAs':
-        this.router.navigate(['/analyze/mirnas']);
+      case "miRNAs":
+        this.router.navigate(["/analyze/mirnas"]);
         break;
-      case 'Genomic Variants':
-        this.router.navigate(['/analyze/genomic-variants']);
+      case "Genomic Variants":
+        this.router.navigate(["/analyze/genomic-variants"]);
         break;
-      case 'Epigenomics':
-        this.router.navigate(['/analyze/epigenomics']);
+      case "Epigenomics":
+        this.router.navigate(["/analyze/epigenomics"]);
         break;
       default:
-        console.warn('Unknown omics type:', omicsType);
+        console.warn("Unknown omics type:", omicsType);
         break;
     }
   }
@@ -148,18 +163,19 @@ export class UploadService implements OnDestroy {
     this.epConTable = [];
     this.analysisTable = [];
     this.resetOmicsVector();
-    localStorage.removeItem('metabolitics-data-Metabolomics');
-    localStorage.removeItem('metabolitics-data-Transcriptomics');
-    localStorage.removeItem('metabolitics-data-Proteomics');
-    localStorage.removeItem('metabolitics-data-miRNAs');
-    localStorage.removeItem('metabolitics-data');
+    localStorage.removeItem("metabolitics-data-Metabolomics");
+    localStorage.removeItem("metabolitics-data-Transcriptomics");
+    localStorage.removeItem("metabolitics-data-Proteomics");
+    localStorage.removeItem("metabolitics-data-miRNAs");
+    localStorage.removeItem("metabolitics-data-GenomicVariant");
+    localStorage.removeItem("metabolitics-data");
   }
 
   ngOnDestroy() {
     if (this.routerSubscription) {
       this.routerSubscription.unsubscribe();
     }
-    window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+    window.removeEventListener("beforeunload", this.beforeUnloadHandler);
   }
 
   jsonChange($event, omicsType: string) {
@@ -173,133 +189,229 @@ export class UploadService implements OnDestroy {
     myReader.readAsText(file);
     myReader.onload = (e: any) => {
       this.temp = JSON.parse(e.target.result);
-      if (omicsType == 'Metabolomics') {
-        localStorage.removeItem('metabolitics-data-Metabolomics');
-        this.loader.get('Recon3D', (recon) => {
+      if (omicsType == "Metabolomics") {
+        localStorage.removeItem("metabolitics-data-Metabolomics");
+        this.loader.get("Recon3D", (recon) => {
           for (let t in this.temp) {
             if (recon.metabolites[t]) {
-              this.mConTable.push([t, this.temp[t], recon.metabolites[t].id, recon.metabolites[t].name, true]);
+              this.mConTable.push([
+                t,
+                this.temp[t],
+                recon.metabolites[t].id,
+                recon.metabolites[t].name,
+                true,
+              ]);
             } else {
               if (this.synonymList[t]) {
                 const name = this.prioritizeMetabolites(this.synonymList[t]);
                 if (recon.metabolites[name]) {
-                  this.mConTable.push([t, this.temp[t], name, recon.metabolites[name].name, true]);
+                  this.mConTable.push([
+                    t,
+                    this.temp[t],
+                    name,
+                    recon.metabolites[name].name,
+                    true,
+                  ]);
                 } else {
                   this.mConTable.push([t, this.temp[t], name, name, true]);
                 }
               } else {
-                this.mConTable.push([t, this.temp[t], '-', '-', false]);
+                this.mConTable.push([t, this.temp[t], "-", "-", false]);
               }
             }
           }
         });
-      }
-      else if (omicsType == 'Transcriptomics') {
-        localStorage.removeItem('metabolitics-data-Transcriptomics');
+      } else if (omicsType == "Transcriptomics") {
+        localStorage.removeItem("metabolitics-data-Transcriptomics");
         for (let gene in this.temp) {
           const value = this.temp[gene];
           const uniprots = uniprot_synonym_mapping[gene];
-          if (!uniprots) { // No synonyms found
+          if (!uniprots) {
+            // No synonyms found
             // Check directly
             if (graph.vertices[gene]) {
-              this.tConTable.push([gene, Number(value), graph.vertices[gene].label || gene, gene, true]);
+              this.tConTable.push([
+                gene,
+                Number(value),
+                graph.vertices[gene].label || gene,
+                gene,
+                true,
+              ]);
+            } else {
+              this.tConTable.push([gene, Number(value), "-", "-", false]);
             }
-            else {
-              this.tConTable.push([gene, Number(value), '-', '-', false]);
-            }
-          }
-          else {
+          } else {
             var matched = false;
             for (const uniprot_id of uniprots) {
-              const transcript_id = uniprot_id + '_transcript';
-              const transcript_id_x = transcript_id + '_x';
+              const transcript_id = uniprot_id + "_transcript";
+              const transcript_id_x = transcript_id + "_x";
               const matched_id = graph.vertices[transcript_id];
               const matched_id_x = graph.vertices[transcript_id_x];
 
               if (matched_id) {
-                this.tConTable.push([gene, Number(value), matched_id.label || gene, transcript_id, true]);
+                this.tConTable.push([
+                  gene,
+                  Number(value),
+                  matched_id.label || gene,
+                  transcript_id,
+                  true,
+                ]);
                 matched = true;
                 break;
-              }
-              else if (matched_id_x) {
-                this.tConTable.push([gene, Number(value), matched_id_x.label || gene, transcript_id_x, true]);
+              } else if (matched_id_x) {
+                this.tConTable.push([
+                  gene,
+                  Number(value),
+                  matched_id_x.label || gene,
+                  transcript_id_x,
+                  true,
+                ]);
                 matched = true;
                 break;
               }
             }
             if (!matched)
-              this.tConTable.push([gene, Number(value), '-', '-', false]);
+              this.tConTable.push([gene, Number(value), "-", "-", false]);
           }
         }
-      }
-      else if (omicsType == 'Proteomics') {
-        localStorage.removeItem('metabolitics-data-Proteomics');
+      } else if (omicsType == "Proteomics") {
+        localStorage.removeItem("metabolitics-data-Proteomics");
         for (let protein in this.temp) {
           const value = this.temp[protein];
           const uniprots = uniprot_synonym_mapping[protein];
 
-          if (!uniprots) { // No synonyms found
+          if (!uniprots) {
+            // No synonyms found
             // Check directly
             if (graph.vertices[protein]) {
-              this.pConTable.push([protein, Number(value), graph.vertices[protein].label || protein, protein, true]);
+              this.pConTable.push([
+                protein,
+                Number(value),
+                graph.vertices[protein].label || protein,
+                protein,
+                true,
+              ]);
+            } else {
+              this.pConTable.push([protein, Number(value), "-", "-", false]);
             }
-            else {
-              this.pConTable.push([protein, Number(value), '-', '-', false]);
-            }
-          }
-          else {
+          } else {
             var matched = false;
             for (const uniprot_id of uniprots) {
-              const protein_id = uniprot_id + '_protein';
-              const protein_id_x = protein_id + '_x';
+              const protein_id = uniprot_id + "_protein";
+              const protein_id_x = protein_id + "_x";
               const matched_id = graph.vertices[protein_id];
               const matched_id_x = graph.vertices[protein_id_x];
 
               if (matched_id) {
-                this.pConTable.push([protein, Number(value), matched_id.label || protein, protein_id, true]);
+                this.pConTable.push([
+                  protein,
+                  Number(value),
+                  matched_id.label || protein,
+                  protein_id,
+                  true,
+                ]);
                 matched = true;
                 break;
-              }
-              else if (matched_id_x) {
-                this.pConTable.push([protein, Number(value), matched_id_x.label || protein, protein_id_x, true]);
+              } else if (matched_id_x) {
+                this.pConTable.push([
+                  protein,
+                  Number(value),
+                  matched_id_x.label || protein,
+                  protein_id_x,
+                  true,
+                ]);
                 matched = true;
                 break;
               }
             }
             if (!matched)
-              this.pConTable.push([protein, Number(value), '-', '-', false]);
+              this.pConTable.push([protein, Number(value), "-", "-", false]);
           }
         }
-      }
-      else if (omicsType == 'miRNAs') {
-        localStorage.removeItem('metabolitics-data-miRNAs');
+      } else if (omicsType == "miRNAs") {
+        localStorage.removeItem("metabolitics-data-miRNAs");
         for (let mirna in this.temp) {
           const value = this.temp[mirna];
           if (graph.vertices[mirna]) {
-            this.mrConTable.push([mirna, Number(value), graph.vertices[mirna].label || mirna, mirna, true]);
+            this.mrConTable.push([
+              mirna,
+              Number(value),
+              graph.vertices[mirna].label || mirna,
+              mirna,
+              true,
+            ]);
           } else {
-            this.mrConTable.push([mirna, Number(value), '-', '-', false]);
+            this.mrConTable.push([mirna, Number(value), "-", "-", false]);
+          }
+        }
+      } else if (omicsType == "Genomic Variants") {
+        localStorage.removeItem("metabolitics-data-GenomicVariants");
+
+        for (let variant in this.temp) {
+          const item = this.temp[variant];
+          const targetGene = item.gene_symbol;
+          const impact_score =
+            item.impact_score !== undefined ? Number(item.impact_score) : 0;
+
+          // Wrap all extras into ONE object
+          const metadata = {
+            clinical_sig: item.clinical_significance || "Unknown",
+            consequence: item.consequence || "n/a",
+            location:
+              item.chromosome && item.position
+                ? `${item.chromosome}:${item.position}`
+                : "unknown",
+          };
+          if (graph.vertices[targetGene]) {
+            const vertex = graph.vertices[targetGene];
+            this.gvConTable.push([
+              variant, // 0: string
+              impact_score, // 1: number
+              vertex.label || targetGene, // 2: string
+              targetGene, // 3: string
+              true, // 4: boolean
+              metadata, // 5: object (The "alias" container)
+            ]);
+          } else {
+            this.gvConTable.push([
+              variant,
+              impact_score,
+              "-",
+              "-",
+              false,
+              metadata,
+            ]);
           }
         }
       }
       switch (omicsType) {
-        case 'Metabolomics':
-          this.omicsService.updateOmicsData('Metabolomics', { fileName: file.name });
+        case "Metabolomics":
+          this.omicsService.updateOmicsData("Metabolomics", {
+            fileName: file.name,
+          });
           break;
-        case 'Transcriptomics':
-          this.omicsService.updateOmicsData('Transcriptomics', { fileName: file.name });
+        case "Transcriptomics":
+          this.omicsService.updateOmicsData("Transcriptomics", {
+            fileName: file.name,
+          });
           break;
-        case 'Proteomics':
-          this.omicsService.updateOmicsData('Proteomics', { fileName: file.name });
+        case "Proteomics":
+          this.omicsService.updateOmicsData("Proteomics", {
+            fileName: file.name,
+          });
           break;
-        case 'miRNAs':
-          this.omicsService.updateOmicsData('miRNAs', { fileName: file.name });
+        case "miRNAs":
+          this.omicsService.updateOmicsData("miRNAs", { fileName: file.name });
           break;
-        case 'Genomic Variants':
-          this.omicsService.updateOmicsData('Genomic Variants', { fileName: file.name });
+        case "Genomic Variants":
+          this.omicsService.updateOmicsData("Genomic Variants", {
+            fileName: file.name,
+          });
           break;
-        case 'Epigenomics':
-          this.omicsService.updateOmicsData('Epigenomics', { fileName: file.name });
+        case "Epigenomics":
+          this.omicsService.updateOmicsData("Epigenomics", {
+            fileName: file.name,
+          });
           break;
       }
     };
@@ -315,152 +427,215 @@ export class UploadService implements OnDestroy {
     myReader.readAsText(file);
     myReader.onload = (e: any) => {
       const lines = e.target.result.split("\n");
-      if (omicsType == 'Metabolomics') {
-        localStorage.removeItem('metabolitics-data-Metabolomics');
-        this.loader.get('Recon3D', (recon) => {
+      if (omicsType == "Metabolomics") {
+        localStorage.removeItem("metabolitics-data-Metabolomics");
+        this.loader.get("Recon3D", (recon) => {
           for (let line of lines) {
-            const splitted = line.split(',');
-            const originalName = splitted[0].trim().replace(/^"|"$/g, '');
-            if (originalName !== '' && originalName !== null) {
+            const splitted = line.split(",");
+            const originalName = splitted[0].trim().replace(/^"|"$/g, "");
+            if (originalName !== "" && originalName !== null) {
               const value = splitted[1];
               if (recon.metabolites[originalName]) {
-                this.mConTable.push([originalName, value, recon.metabolites[originalName].id, recon.metabolites[originalName].name, true]);
+                this.mConTable.push([
+                  originalName,
+                  value,
+                  recon.metabolites[originalName].id,
+                  recon.metabolites[originalName].name,
+                  true,
+                ]);
               } else {
                 if (this.synonymList[originalName]) {
-                  const reconName = this.prioritizeMetabolites(this.synonymList[originalName]);
+                  const reconName = this.prioritizeMetabolites(
+                    this.synonymList[originalName]
+                  );
                   if (recon.metabolites[reconName]) {
-                    this.mConTable.push([originalName, value, reconName, recon.metabolites[reconName].name, true]);
+                    this.mConTable.push([
+                      originalName,
+                      value,
+                      reconName,
+                      recon.metabolites[reconName].name,
+                      true,
+                    ]);
                   } else {
-                    this.mConTable.push([originalName, value, reconName, reconName, true]);
+                    this.mConTable.push([
+                      originalName,
+                      value,
+                      reconName,
+                      reconName,
+                      true,
+                    ]);
                   }
                 } else {
-                  this.mConTable.push([originalName, value, '-', '-', false]);
+                  this.mConTable.push([originalName, value, "-", "-", false]);
                 }
               }
             }
           }
         });
-      }
-      else if (omicsType == 'Transcriptomics') {
-        localStorage.removeItem('metabolitics-data-Transcriptomics');
+      } else if (omicsType == "Transcriptomics") {
+        localStorage.removeItem("metabolitics-data-Transcriptomics");
         for (let line of lines) {
-          const splitted = line.split(',');
-          const gene = splitted[0].replace(/"/g, ''); // Original name
+          const splitted = line.split(",");
+          const gene = splitted[0].replace(/"/g, ""); // Original name
           const value = splitted[1];
 
           const uniprots = uniprot_synonym_mapping[gene];
-          if (!uniprots) { // No synonyms found
+          if (!uniprots) {
+            // No synonyms found
             // Check directly
             if (graph.vertices[gene]) {
-              this.tConTable.push([gene, Number(value), graph.vertices[gene].label || gene, gene, true]);
+              this.tConTable.push([
+                gene,
+                Number(value),
+                graph.vertices[gene].label || gene,
+                gene,
+                true,
+              ]);
+            } else {
+              this.tConTable.push([gene, Number(value), "-", "-", false]);
             }
-            else {
-              this.tConTable.push([gene, Number(value), '-', '-', false]);
-            }
-          }
-          else {
+          } else {
             var matched = false;
             for (const uniprot_id of uniprots) {
-              const transcript_id = uniprot_id + '_transcript';
-              const transcript_id_x = transcript_id + '_x';
+              const transcript_id = uniprot_id + "_transcript";
+              const transcript_id_x = transcript_id + "_x";
               const matched_id = graph.vertices[transcript_id];
               const matched_id_x = graph.vertices[transcript_id_x];
 
               if (matched_id) {
-                this.tConTable.push([gene, Number(value), matched_id.label || gene, transcript_id, true]);
+                this.tConTable.push([
+                  gene,
+                  Number(value),
+                  matched_id.label || gene,
+                  transcript_id,
+                  true,
+                ]);
                 matched = true;
                 break;
-              }
-              else if (matched_id_x) {
-                this.tConTable.push([gene, Number(value), matched_id_x.label || gene, transcript_id_x, true]);
+              } else if (matched_id_x) {
+                this.tConTable.push([
+                  gene,
+                  Number(value),
+                  matched_id_x.label || gene,
+                  transcript_id_x,
+                  true,
+                ]);
                 matched = true;
                 break;
               }
             }
             if (!matched)
-              this.tConTable.push([gene, Number(value), '-', '-', false]);
+              this.tConTable.push([gene, Number(value), "-", "-", false]);
           }
         }
-      }
-      else if (omicsType == 'Proteomics') {
-        localStorage.removeItem('metabolitics-data-Proteomics');
+      } else if (omicsType == "Proteomics") {
+        localStorage.removeItem("metabolitics-data-Proteomics");
         for (let line of lines) {
-          const splitted = line.split(',');
-          const protein = splitted[0].replace(/"/g, ''); // Original name
+          const splitted = line.split(",");
+          const protein = splitted[0].replace(/"/g, ""); // Original name
           const value = splitted[1];
 
           const uniprots = uniprot_synonym_mapping[protein];
-          if (!uniprots) { // No synonyms found
+          if (!uniprots) {
+            // No synonyms found
             // Check directly
             if (graph.vertices[protein]) {
-              this.pConTable.push([protein, Number(value), graph.vertices[protein].label || protein, protein, true]);
+              this.pConTable.push([
+                protein,
+                Number(value),
+                graph.vertices[protein].label || protein,
+                protein,
+                true,
+              ]);
+            } else {
+              this.pConTable.push([protein, Number(value), "-", "-", false]);
             }
-            else {
-              this.pConTable.push([protein, Number(value), '-', '-', false]);
-            }
-          }
-          else {
+          } else {
             var matched = false;
             for (const uniprot_id of uniprots) {
-              const protein_id = uniprot_id + '_protein';
-              const protein_x_id = protein_id + '_x';
+              const protein_id = uniprot_id + "_protein";
+              const protein_x_id = protein_id + "_x";
               const matched_id = graph.vertices[protein_id];
               const matched_id_x = graph.vertices[protein_x_id];
 
               if (matched_id) {
-                this.pConTable.push([protein, Number(value), matched_id.label || protein, protein_id, true]);
+                this.pConTable.push([
+                  protein,
+                  Number(value),
+                  matched_id.label || protein,
+                  protein_id,
+                  true,
+                ]);
                 matched = true;
                 break;
-              }
-              else if (matched_id_x) {
-                this.pConTable.push([protein, Number(value), matched_id_x.label || protein, protein_x_id, true]);
+              } else if (matched_id_x) {
+                this.pConTable.push([
+                  protein,
+                  Number(value),
+                  matched_id_x.label || protein,
+                  protein_x_id,
+                  true,
+                ]);
                 matched = true;
                 break;
               }
             }
             if (!matched)
-              this.pConTable.push([protein, Number(value), '-', '-', false]);
+              this.pConTable.push([protein, Number(value), "-", "-", false]);
           }
         }
-      }
-      else if (omicsType == 'miRNAs') {
-        localStorage.removeItem('metabolitics-data-miRNAs');
+      } else if (omicsType == "miRNAs") {
+        localStorage.removeItem("metabolitics-data-miRNAs");
         for (let line of lines) {
-          const splitted = line.split(',');
-          const mirna = splitted[0].replace(/"/g, '');
+          const splitted = line.split(",");
+          const mirna = splitted[0].replace(/"/g, "");
           const value = splitted[1];
 
-          if (mirna !== '' && mirna !== null) {
+          if (mirna !== "" && mirna !== null) {
             if (graph.vertices[mirna]) {
-              this.mrConTable.push([mirna, Number(value), graph.vertices[mirna].label || mirna, mirna, true]);
+              this.mrConTable.push([
+                mirna,
+                Number(value),
+                graph.vertices[mirna].label || mirna,
+                mirna,
+                true,
+              ]);
             } else {
-              this.mrConTable.push([mirna, Number(value), '-', '-', false]);
+              this.mrConTable.push([mirna, Number(value), "-", "-", false]);
             }
           }
         }
-      }
-      else if (omicsType == 'Genomic Variants') {
-      }
-      else if (omicsType == 'Epigenomics') {
+      } else if (omicsType == "Genomic Variants") {
+      } else if (omicsType == "Epigenomics") {
       }
       switch (omicsType) {
-        case 'Metabolomics':
-          this.omicsService.updateOmicsData('Metabolomics', { fileName: file.name });
+        case "Metabolomics":
+          this.omicsService.updateOmicsData("Metabolomics", {
+            fileName: file.name,
+          });
           break;
-        case 'Transcriptomics':
-          this.omicsService.updateOmicsData('Transcriptomics', { fileName: file.name });
+        case "Transcriptomics":
+          this.omicsService.updateOmicsData("Transcriptomics", {
+            fileName: file.name,
+          });
           break;
-        case 'Proteomics':
-          this.omicsService.updateOmicsData('Proteomics', { fileName: file.name });
+        case "Proteomics":
+          this.omicsService.updateOmicsData("Proteomics", {
+            fileName: file.name,
+          });
           break;
-        case 'miRNAs':
-          this.omicsService.updateOmicsData('miRNAs', { fileName: file.name });
+        case "miRNAs":
+          this.omicsService.updateOmicsData("miRNAs", { fileName: file.name });
           break;
-        case 'Genomic Variants':
-          this.omicsService.updateOmicsData('Genomic Variants', { fileName: file.name });
+        case "Genomic Variants":
+          this.omicsService.updateOmicsData("Genomic Variants", {
+            fileName: file.name,
+          });
           break;
-        case 'Epigenomics':
-          this.omicsService.updateOmicsData('Epigenomics', { fileName: file.name });
+        case "Epigenomics":
+          this.omicsService.updateOmicsData("Epigenomics", {
+            fileName: file.name,
+          });
           break;
       }
     };
@@ -480,24 +655,31 @@ export class UploadService implements OnDestroy {
     this.file3 = inputValue.target.files[0];
     let fileReader = new FileReader();
     fileReader.onload = (e) => {
-      this.httpClient.post(`${AppSettings.API_ENDPOINT}/workbench`, {
-        data: fileReader.result
-      }).subscribe(data => {
-        this.notify2.remove();
-        const recData = data as JSON;
-        const compressedData = LZString.compress(JSON.stringify(recData));
-        localStorage.setItem('metabolitics-data', compressedData);
-        this.router.navigate(['/analyze/excel-data']);
-      },
-        err => {
-          console.log("Error occured");
-        }
-      );
-    }
+      this.httpClient
+        .post(`${AppSettings.API_ENDPOINT}/workbench`, {
+          data: fileReader.result,
+        })
+        .subscribe(
+          (data) => {
+            this.notify2.remove();
+            const recData = data as JSON;
+            const compressedData = LZString.compress(JSON.stringify(recData));
+            localStorage.setItem("metabolitics-data", compressedData);
+            this.router.navigate(["/analyze/excel-data"]);
+          },
+          (err) => {
+            console.log("Error occured");
+          }
+        );
+    };
     fileReader.readAsText(this.file3);
   }
 
-  incomingfile(event, loadingRef: { value: boolean }, omicsType: string = 'Metabolomics') {
+  incomingfile(
+    event,
+    loadingRef: { value: boolean },
+    omicsType: string = "Metabolomics"
+  ) {
     this.isLoading = true;
     if (loadingRef) loadingRef.value = true;
 
@@ -510,53 +692,72 @@ export class UploadService implements OnDestroy {
     }
   }
 
-  onFileChange(file: any, loadingRef: { value: boolean }, omicsType: string = 'Metabolomics') {
+  onFileChange(
+    file: any,
+    loadingRef: { value: boolean },
+    omicsType: string = "Metabolomics"
+  ) {
     const reader: FileReader = new FileReader();
     reader.onload = (e: any) => {
       const bstr: string = e.target.result;
-      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: "binary" });
       const wsname: string = wb.SheetNames[0];
       const wsname2: string = wb.SheetNames[1];
       const ws: XLSX.WorkSheet = wb.Sheets[wsname];
       const ws2: XLSX.WorkSheet = wb.Sheets[wsname2];
-      const data2 = <any>(XLSX.utils.sheet_to_json(ws, { header: 1 }));
-      const meta = <any>(XLSX.utils.sheet_to_json(ws2, { header: 1 }));
-      this.httpClient.post(`${AppSettings.API_ENDPOINT}/excel`, {
-        data: data2, meta: meta, omicsType: omicsType
-      }).subscribe(data => {
-        this.notify2.remove();
-        const recData = data as JSON;
-        const compressedData = LZString.compress(JSON.stringify(recData));
+      const data2 = <any>XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const meta = <any>XLSX.utils.sheet_to_json(ws2, { header: 1 });
+      this.httpClient
+        .post(`${AppSettings.API_ENDPOINT}/excel`, {
+          data: data2,
+          meta: meta,
+          omicsType: omicsType,
+        })
+        .subscribe(
+          (data) => {
+            this.notify2.remove();
+            const recData = data as JSON;
+            const compressedData = LZString.compress(JSON.stringify(recData));
 
-        // Store based on omics type
-        if (omicsType === 'Transcriptomics') {
-          localStorage.setItem('metabolitics-data-Transcriptomics', compressedData);
-        } else if (omicsType === 'Proteomics') {
-          localStorage.setItem('metabolitics-data-Proteomics', compressedData);
-        } else if (omicsType === 'miRNAs') {
-          localStorage.setItem('metabolitics-data-miRNAs', compressedData);
-        } else {
-          localStorage.setItem('metabolitics-data-Metabolomics', compressedData);
-        }
+            // Store based on omics type
+            if (omicsType === "Transcriptomics") {
+              localStorage.setItem(
+                "metabolitics-data-Transcriptomics",
+                compressedData
+              );
+            } else if (omicsType === "Proteomics") {
+              localStorage.setItem(
+                "metabolitics-data-Proteomics",
+                compressedData
+              );
+            } else if (omicsType === "miRNAs") {
+              localStorage.setItem("metabolitics-data-miRNAs", compressedData);
+            } else {
+              localStorage.setItem(
+                "metabolitics-data-Metabolomics",
+                compressedData
+              );
+            }
 
+            // Update omics service status
+            this.omicsService.updateOmicsData(omicsType, {
+              fileName: file.name,
+            });
 
-        // Update omics service status
-        this.omicsService.updateOmicsData(omicsType, { fileName: file.name });
+            // Stop loading
+            this.isLoading = false;
+            if (loadingRef) loadingRef.value = false;
 
-        // Stop loading
-        this.isLoading = false;
-        if (loadingRef) loadingRef.value = false;
-
-        console.log(recData);
-        // Do NOT navigate immediately
-        // this.router.navigate(['/analyze/excel-data']);
-      },
-        err => {
-          console.log("Error occured");
-          this.isLoading = false;
-          if (loadingRef) loadingRef.value = false;
-        }
-      );
+            console.log(recData);
+            // Do NOT navigate immediately
+            // this.router.navigate(['/analyze/excel-data']);
+          },
+          (err) => {
+            console.log("Error occured");
+            this.isLoading = false;
+            if (loadingRef) loadingRef.value = false;
+          }
+        );
     };
     reader.readAsBinaryString(this.file5);
   }
@@ -565,14 +766,14 @@ export class UploadService implements OnDestroy {
     let is_c_found = false;
     let is_m_found = false;
     let recon_name = "";
-    metaboliteList.forEach(metabolite => {
+    metaboliteList.forEach((metabolite) => {
       if (/_c/.test(metabolite) && !is_c_found) {
         recon_name = metabolite;
         is_c_found = true;
       }
     });
     if (!is_c_found) {
-      metaboliteList.forEach(metabolite => {
+      metaboliteList.forEach((metabolite) => {
         if (/_m/.test(metabolite) && !is_m_found) {
           recon_name = metabolite;
           is_m_found = true;
@@ -616,20 +817,19 @@ export class UploadService implements OnDestroy {
 
   getContinueButton(): string {
     if (this.omicsVector.length === 1) {
-      return 'Continue to Analysis';
-    }
-    else if (this.omicsVector.length > 1) {
+      return "Continue to Analysis";
+    } else if (this.omicsVector.length > 1) {
       // Check if this is the last omics in the vector
       const isLastOmics = this.currentOmicsIndex >= this.omicsVector.length - 1;
 
       if (isLastOmics) {
-        return 'Continue to Analysis';
+        return "Continue to Analysis";
       } else {
         const nextOmicsType = this.omicsVector[this.currentOmicsIndex + 1];
         return `Continue to ${nextOmicsType}`;
       }
     }
-    return 'Continue';
+    return "Continue";
   }
 
   canProceed(currentOmicsName: string): boolean {
@@ -654,15 +854,26 @@ export class UploadService implements OnDestroy {
         this.navigateToOmicsType(nextOmicsType);
       } else {
         // Check if we have Excel data for either omics type
-        const hasExcelMetabolomics = localStorage.getItem('metabolitics-data-Metabolomics');
-        const hasExcelTranscriptomics = localStorage.getItem('metabolitics-data-Transcriptomics');
-        const hasExcelProteomics = localStorage.getItem('metabolitics-data-Proteomics');
-        const hasExcelMiRNA = localStorage.getItem('metabolitics-data-miRNAs');
+        const hasExcelMetabolomics = localStorage.getItem(
+          "metabolitics-data-Metabolomics"
+        );
+        const hasExcelTranscriptomics = localStorage.getItem(
+          "metabolitics-data-Transcriptomics"
+        );
+        const hasExcelProteomics = localStorage.getItem(
+          "metabolitics-data-Proteomics"
+        );
+        const hasExcelMiRNA = localStorage.getItem("metabolitics-data-miRNAs");
 
-        if (hasExcelMetabolomics || hasExcelTranscriptomics || hasExcelProteomics || hasExcelMiRNA) {
-          this.router.navigate(['/analyze/excel-data']);
+        if (
+          hasExcelMetabolomics ||
+          hasExcelTranscriptomics ||
+          hasExcelProteomics ||
+          hasExcelMiRNA
+        ) {
+          this.router.navigate(["/analyze/excel-data"]);
         } else {
-          this.router.navigate(['/analyze/submit']);
+          this.router.navigate(["/analyze/submit"]);
         }
       }
       /*
@@ -702,4 +913,4 @@ export class UploadService implements OnDestroy {
       this.navigateToOmicsType(nextOmicsType);
     }
   }
-};
+}
