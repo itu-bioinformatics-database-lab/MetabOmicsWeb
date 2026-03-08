@@ -1,16 +1,17 @@
-.proteomics-container {
-    padding: 20px;
+.genomic-variants-measurement-container {
+    padding: 40px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
 }
 
 .header h2 {
     color: #2c3e50;
+    font-size: 2rem;
     margin-bottom: 10px;
 }
 
@@ -19,6 +20,62 @@
     font-size: 1.1em;
 }
 
+/* Options Section Styles */
+.options-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.option-card {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.option-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.option-icon {
+    font-size: 3rem;
+    color: #3498db;
+    margin-bottom: 20px;
+}
+
+.option-card h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.option-card p {
+    color: #7f8c8d;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 12px 30px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+/* Upload Section Styles (for upload page if needed) */
 .upload-section {
     background: white;
     border-radius: 8px;
@@ -102,70 +159,6 @@
     }
 }
 
-.data-preview {
-    margin-top: 30px;
-}
-
-.data-preview h3 {
-    color: #2c3e50;
-    margin-bottom: 15px;
-}
-
-.table-container {
-    overflow-x: auto;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-.data-table th,
-.data-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.data-table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.data-table tr:hover {
-    background-color: #f8f9fa;
-}
-
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    background-color: #e74c3c;
-    color: white;
-}
-
-.status-badge.valid {
-    background-color: #2ecc71;
-}
-
-@media (max-width: 768px) {
-    .proteomics-container {
-        padding: 10px;
-    }
-
-    .upload-card {
-        padding: 15px;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 8px;
-        font-size: 14px;
-    }
-}
-
 .actions {
     display: flex;
     justify-content: flex-end;
@@ -175,4 +168,28 @@
 
 .actions .btn {
     min-width: 120px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .epigenomics-measurement-container {
+        padding: 20px;
+    }
+
+    .options-section {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .option-card {
+        padding: 20px;
+    }
+
+    .option-icon {
+        font-size: 2.5rem;
+    }
+
+    .upload-card {
+        padding: 15px;
+    }
 }

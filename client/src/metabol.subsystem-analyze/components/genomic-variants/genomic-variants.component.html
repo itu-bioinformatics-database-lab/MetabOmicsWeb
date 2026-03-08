@@ -15,7 +15,7 @@
           <input
             type="file"
             class="form-control"
-            (change)="uploadService.csvChange($event, 'genomic variants')"
+            (change)="uploadService.csvChange($event, 'Genomic Variants')"
             accept=".csv"
           />
           <span class="file-info"
@@ -45,7 +45,7 @@
           <input
             type="file"
             class="form-control"
-            (change)="uploadService.incomingfile($event, { value: loading })"
+            (change)="uploadService.incomingfile($event, { value: loading }, 'Genomic Variants')"
             accept=".xlsx"
           />
           <span class="file-info"
@@ -80,8 +80,8 @@
   <div class="actions">
     <button
       class="btn btn-primary"
-      (click)="uploadService.proceed('genomic variants')"
-      [disabled]="!uploadService.canProceed('genomic variants')"
+      (click)="uploadService.proceed('Genomic Variants')"
+      [disabled]="!uploadService.canProceed('Genomic Variants')"
     >
       {{ uploadService.getContinueButton() }}
     </button>
