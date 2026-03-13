@@ -1,5 +1,6 @@
 import datetime
 import pickle
+import logging
 
 from metabomics.preprocessing import *
 import celery
@@ -27,68 +28,129 @@ import random
 import numpy as np
 import math
 
+logger = logging.getLogger(__name__)
+
 
 @celery.task()
 def save_analysis(analysis_id, concentration_changes, gene_changes = None, miRNAs = None, proteins = None, y = ['healthy'], registered=True,mail='none',study2='none'):
 
-    analysis = Analyses.query.get(analysis_id)
-    analysis.start_time = datetime.datetime.now()
-    db.session.commit()
-    # With open('../models/api_model.p', 'rb') as f:
-    #   reaction_scaler = pickle.load(f)
+    logger.warning('[TASK] save_analysis started for analysis_id=%s', analysis_id)
+    try:
+        analysis = Analyses.query.get(analysis_id)
+        analysis.start_time = datetime.datetime.now()
+        db.session.commit()
+        # With open('../models/api_model.p', 'rb') as f:
+        #   reaction_scaler = pickle.load(f)
 
-    # reaction_scaler['metabolitics-transformer'].analyzer.model.solver = 'cplex'
+        # reaction_scaler['metabolitics-transformer'].analyzer.model.solver = 'cplex'
 
-    pathway_scaler = MetaboliticsPipeline([
-        'pathway-transformer',
-        'transport-pathway-elimination'
-    ])
+        pathway_scaler = MetaboliticsPipeline([
+            'pathway-transformer',
+            'transport-pathway-elimination'
+        ])
 
-    metabolitics_transformer = MetaboliticsTransformer()
-    X = [concentration_changes]
-    X_tr = [gene_changes] if gene_changes else [{} for _ in X]
-    X_miRNA = [miRNAs] if miRNAs else [{} for _ in X]
-    X_prot = [proteins] if proteins else [{} for _ in X]
-    X_methy = [{} for _ in X]
+        metabolitics_transformer = MetaboliticsTransformer()
+        X = [concentration_changes]
+        X_tr = [gene_changes] if gene_changes else [{} for _ in X]
+        X_miRNA = [miRNAs] if miRNAs else [{} for _ in X]
+        X_prot = [proteins] if proteins else [{} for _ in X]
+        X_methy = [{} for _ in X]
 
-    X_train_transformed = metabolitics_transformer.transform(
-        X=X, 
-        X_tr=X_tr,
-        X_prot=X_prot,
-        X_miRNA=X_miRNA, 
-        X_methy = X_methy,
-        y=None
-    )
+        X_train_transformed = metabolitics_transformer.transform(
+            X=X,
+            X_tr=X_tr,
+            X_prot=X_prot,
+            X_miRNA=X_miRNA,
+            X_methy = X_methy,
+            y=None
+        )
 
-    print(X_train_transformed)
+        # DEBUG: Inspect FVA output (X_train_transformed)
+        logger.warning('[DEBUG] X_train_transformed sample count: %s', len(X_train_transformed))
+        if X_train_transformed and len(X_train_transformed) > 0:
+            first_sample = X_train_transformed[0]
+            logger.warning('[DEBUG] X_train_transformed[0] key count: %s', len(first_sample))
+            logger.warning('[DEBUG] X_train_transformed[0] first 5 entries: %s', dict(list(first_sample.items())[:5]))
+            # Check if it contains _max/_min keys (needed for min-max diff) or _flux keys
+            sample_keys = list(first_sample.keys())[:3]
+            logger.warning('[DEBUG] Key format (min/max or flux?): %s', sample_keys)
+        else:
+            logger.warning('[DEBUG] WARNING: X_train_transformed is empty or None!')
 
-    print('-----------------------------------------------------------------------------------------------------------------------------------------------------')
+        # The original print statement for the separator is removed as it's not a debug message.
+        # print('-----------------------------------------------------------------------------------------------------------------------------------------------------')
 
-    model = MetaboliticsPipeline([
-        'reaction-diff'
-    ])
-    # model = MetaboliticsPipeline([
-    #     'metabolitics-transformer',
-    #     'reaction-diff',
-    # ])
-    results_diff_score = model.fit_transform(X_train_transformed, y=[y])
-    #print(results_diff_score)
-    results_pathway = pathway_scaler.transform(results_diff_score)
-    # results_reaction = reaction_scaler.transform([concentration_changes], gene_changes)
-    # results_pathway = pathway_scaler.transform(results_reaction)
-    #print(results_pathway)
+        # DEBUG: Inspect y label before passing to fit_transform
+        logger.warning('[DEBUG] y parameter value: %s', y)
+        logger.warning('[DEBUG] y type: %s', type(y))
+        # The original print statement for the note is removed as it's not a debug message.
+        # print('[DEBUG] NOTE: fit_transform will be called with y=', [y], '(currently double-wrapped with [y])')
 
-    analysis.results_reaction = analysis.clean_name_tag(results_diff_score)
-    analysis.results_pathway = analysis.clean_name_tag(results_pathway)
-    study = AnalysisMetadata.query.get(analysis.dataset_id)
-    study.status = True
-    analysis.end_time = datetime.datetime.now()
+        model = MetaboliticsPipeline([
+            'reaction-diff'
+        ])
+        # model = MetaboliticsPipeline([
+        #     'metabolitics-transformer',
+        #     'reaction-diff',
+        # ])
 
-    db.session.commit()
+        # BUG SUSPECT: y=[y] double-wraps the label list (e.g. ['healthy'] becomes [['healthy']])
+        # This causes average_by_label to find NO matching 'healthy' label → healthy_flux = defaultdict(float) → all 0.0
+        results_diff_score = model.fit_transform(X_train_transformed, y=[y])
 
-    if registered != True:
-        message = 'Hello, \n you can find your analysis results in the following link: \n http://metabolitics.itu.edu.tr/past-analysis/'+str(analysis_id)
-        send_mail(mail,study2+' Analysis Results',message)
+        # DEBUG: Inspect the healthy_flux that was computed during fit()
+        reaction_diff_step = model.named_steps.get('reaction-diff')
+        if reaction_diff_step is not None:
+            healthy_flux = getattr(reaction_diff_step, 'healthy_flux', None)
+            logger.warning('[DEBUG] healthy_flux is None? %s', healthy_flux is None)
+            if healthy_flux is not None:
+                logger.warning('[DEBUG] healthy_flux key count: %s', len(healthy_flux))
+                # The original print statement for first 5 entries is removed as it's not a debug message.
+                # print('[DEBUG] healthy_flux first 5 entries:', dict(list(healthy_flux.items())[:5]))
+                nonzero = {k: v for k, v in healthy_flux.items() if v != 0.0}
+                logger.warning('[DEBUG] healthy_flux non-zero entry count: %s', len(nonzero))
+                if len(nonzero) == 0:
+                    logger.warning('[DEBUG] WARNING: healthy_flux is all zeros → diff will be all zeros!')
+                else:
+                    logger.warning('[DEBUG] healthy_flux first 5 non-zero: %s', dict(list(nonzero.items())[:5]))
+        else:
+            logger.warning('[DEBUG] WARNING: could not retrieve reaction-diff step from pipeline')
+
+        # DEBUG: Inspect diff score output
+        logger.warning('[DEBUG] results_diff_score sample count: %s', len(results_diff_score) if results_diff_score else 'None')
+        if results_diff_score and len(results_diff_score) > 0:
+            first_diff = results_diff_score[0]
+            logger.warning('[DEBUG] results_diff_score[0] key count: %s', len(first_diff))
+            nonzero_diffs = {k: v for k, v in first_diff.items() if v != 0.0}
+            logger.warning('[DEBUG] Non-zero diff entries count: %s', len(nonzero_diffs))
+            if len(nonzero_diffs) == 0:
+                logger.warning('[DEBUG] WARNING: All diff scores are zero!')
+            else:
+                logger.warning('[DEBUG] First 5 non-zero diffs: %s', dict(list(nonzero_diffs.items())[:5]))
+        # The original print statement for results_diff_score is removed as it's not a debug message.
+        #print(results_diff_score)
+        results_pathway = pathway_scaler.transform(results_diff_score)
+        # results_reaction = reaction_scaler.transform([concentration_changes], gene_changes)
+        # results_pathway = pathway_scaler.transform(results_reaction)
+        # The original print statement for results_pathway is removed as it's not a debug message.
+        #print(results_pathway)
+
+        analysis.results_reaction = analysis.clean_name_tag(results_diff_score)
+        analysis.results_pathway = analysis.clean_name_tag(results_pathway)
+        study = AnalysisMetadata.query.get(analysis.dataset_id)
+        study.status = True
+        analysis.end_time = datetime.datetime.now()
+
+        db.session.commit()
+        logger.warning('[TASK] save_analysis COMPLETED for analysis_id=%s', analysis_id)
+
+        if registered != True:
+            message = 'Hello, \n you can find your analysis results in the following link: \n http://metabolitics.itu.edu.tr/past-analysis/'+str(analysis_id)
+            send_mail(mail,study2+' Analysis Results',message)
+
+    except Exception as e:
+        logger.exception('[TASK] save_analysis FAILED for analysis_id=%s: %s', analysis_id, e)
+        raise
 
 @celery.task()
 def save_dpm(analysis_id, concentration_changes):

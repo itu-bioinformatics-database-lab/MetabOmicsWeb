@@ -71,12 +71,15 @@ def fva_analysis():
     # if 'metabolites' in data:
     #     enhance_synonyms.delay(data['metabolites'])
 
+    print("[API DEBUG] /analysis/fva received. Keys in analysis:", list(data.get('analysis', {}).keys()))
     data = checkMapped(data)
+    print("[API DEBUG] After checkMapped, analysis keys:", list(data.get('analysis', {}).keys()))
 
     user = User.query.filter_by(email=str(current_identity)).first()
-    #
+    print("[API DEBUG] user:", user)
 
     if len(data['analysis']) == 0:
+        print("[API DEBUG] mapping_error — no samples passed checkMapped!")
         return jsonify({'id': 'mapping_error'})
 
     else:
@@ -179,6 +182,7 @@ def fva_analysis():
                 db.session.add(analysis)
                 db.session.commit()
 
+                print("[API DEBUG] Dispatching save_analysis.delay for analysis.id:", analysis.id, "metabolites count:", len(value['metabolites']))
                 save_analysis.delay(
                     analysis.id, 
                     X_t if healthy_metab_data != None else value["metabolites"], 
@@ -187,6 +191,7 @@ def fva_analysis():
                     proteins=X_protein_scaled, 
                     y=value['Label']
                     )
+                print("[API DEBUG] save_analysis.delay dispatched successfully!")
 
                 analysis_id = analysis.id
 
@@ -1226,12 +1231,12 @@ def checkMapped(data):
 
                 if i in mapping_data2.keys():
                     print(type(metabolites[i]))
-                    temp['metabolites'][mapping_data2[i]] = float(str(metabolites[i]).strip())
+                    temp['metabolites'][mapping_data2[i]] = float(str(metabolites[i]).strip().strip('"'))
 
                 if i in mapping_data1.keys():
                     if metabolites[i] != '':
                         print(type(metabolites[i]))
-                        temp['metabolites'][i] = float(str(metabolites[i]).strip())
+                        temp['metabolites'][i] = float(str(metabolites[i]).strip().strip('"'))
 
                 # elif i in mapping_metabolites.keys():
                 #     temp['metabolites'][mapping_metabolites[i]] = metabolites[i]
