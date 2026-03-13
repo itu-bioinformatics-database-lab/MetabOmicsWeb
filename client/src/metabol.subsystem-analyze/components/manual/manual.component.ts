@@ -11,6 +11,8 @@ import { UploadService } from '../../services/upload/upload.service';
 export class ManualComponent implements OnInit {
   mConTable: Array<[string, number, string, string, boolean]> = [];
   selectedOmics: OmicsData[] = [];
+  /** The omics type active during this visit (set on init from the service). */
+  currentOmicsType: string = 'Metabolomics';
 
   constructor(
     private router: Router,
@@ -21,22 +23,28 @@ export class ManualComponent implements OnInit {
   ngOnInit() {
     this.selectedOmics = this.omicsService.getSelectedOmicsArray();
     if (this.selectedOmics.length === 0) {
-      // If no omics types are selected, redirect back to welcome
       this.router.navigate(['/analyze/welcome']);
       return;
     }
-    
+
     // Initialize omics vector if not already initialized
     if (this.uploadService.omicsVector.length === 0) {
       this.uploadService.initializeOmicsVector();
     }
-    
+
+    // Detect which omics type is currently active
+    const current = this.omicsService.getCurrentOmics();
+    this.currentOmicsType = (current && current.type) ? current.type : 'Metabolomics';
+
     // Initialize mConTable from UploadService (starts empty for manual entry)
     this.mConTable = this.uploadService.mConTable;
   }
 
   onBackClick() {
-    this.router.navigate(['/analyze/welcome']);
+    const path = this.currentOmicsType === 'Metabolomics'
+      ? '/analyze/metabolomics-measurement'
+      : `/analyze/${this.currentOmicsType.toLowerCase().replace(/\s+/g, '-')}-measurement`;
+    this.router.navigate([path]);
   }
 
   get isCurrentTableEmpty(): boolean {
@@ -49,30 +57,15 @@ export class ManualComponent implements OnInit {
   }
 
   getContinueButtonText(): string {
-    const selectedOmics = this.omicsService.getSelectedOmicsArray();
-    if (selectedOmics.length === 1) {
-      return 'Continue to Analysis';
-    } else if (selectedOmics.length > 1) {
-      const currentIndex = this.omicsService.getCurrentOmicsIndex();
-      const isLastOmics = currentIndex >= selectedOmics.length - 1;
-      
-      if (isLastOmics) {
-        return 'Continue to Analysis';
-      } else {
-        const nextOmicsType = selectedOmics[currentIndex + 1].type;
-        return `Continue to ${nextOmicsType}`;
-      }
-    }
-    return 'Continue';
+    return this.uploadService.getContinueButton();
   }
 
   onContinue() {
-    // Mark Metabolomics as having data entered
     if (!this.isCurrentTableEmpty) {
-      this.omicsService.updateOmicsData('Metabolomics', { fileName: 'Manual Entry' });
+      // Mark the CURRENT omics type as having data entered
+      this.omicsService.updateOmicsData(this.currentOmicsType, { fileName: 'Manual Entry' });
     }
-    
-    // Use upload service to proceed to next omics or submit
-    this.uploadService.proceed('Metabolomics');
+    // Use upload service to proceed through the sequential flow
+    this.uploadService.proceed(this.currentOmicsType);
   }
 }

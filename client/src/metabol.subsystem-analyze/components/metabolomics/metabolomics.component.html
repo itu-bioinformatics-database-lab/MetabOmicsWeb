@@ -1,7 +1,9 @@
 <div class="metabolomics-container">
   <div class="header">
     <h2>Upload Metabolomics Dataset</h2>
-    <p class="description">Upload and analyze your metabolomics data using various file formats.</p>
+    <p class="description">
+      Upload and analyze your metabolomics data using various file formats.
+    </p>
   </div>
 
   <div class="upload-section">
@@ -10,32 +12,67 @@
       <div class="form-group">
         <label class="control-label">CSV Format:</label>
         <div class="input-group">
-          <input type="file" class="form-control" (change)="uploadService.csvChange($event, 'Metabolomics')" accept=".csv">
-          <span class="file-info">Upload metabolite concentration data in CSV format</span>
+          <input
+            type="file"
+            class="form-control"
+            (change)="uploadService.csvChange($event, 'Metabolomics')"
+            accept=".csv"
+          />
+          <span class="file-info"
+            >Upload metabolite concentration data in CSV format</span
+          >
         </div>
       </div>
 
       <div class="form-group">
         <label class="control-label">JSON Format:</label>
         <div class="input-group">
-          <input type="file" class="form-control" (change)="uploadService.jsonChange($event, 'Metabolomics')" accept=".json">
-          <span class="file-info">Upload metabolite concentration data in JSON format</span>
+          <input
+            type="file"
+            class="form-control"
+            (change)="uploadService.jsonChange($event, 'Metabolomics')"
+            accept=".json"
+          />
+          <span class="file-info"
+            >Upload metabolite concentration data in JSON format</span
+          >
         </div>
       </div>
 
       <div class="form-group">
         <label class="control-label">Excel Format:</label>
         <div class="input-group">
-          <input type="file" class="form-control" (change)="uploadService.incomingfile($event, { value: loading }, 'Metabolomics')" accept=".xlsx">
-          <span class="file-info">Upload metabolite concentration data in Excel format</span>
+          <input
+            type="file"
+            class="form-control"
+            (change)="
+              uploadService.incomingfile(
+                $event,
+                { value: loading },
+                'Metabolomics'
+              )
+            "
+            accept=".xlsx"
+          />
+          <span class="file-info"
+            >Upload metabolite concentration data in Excel format</span
+          >
         </div>
       </div>
 
       <div class="form-group">
         <label class="control-label">Workbench Format:</label>
         <div class="input-group">
-          <input type="file" class="form-control" (change)="uploadService.readText($event)" accept=".txt">
-          <span class="file-info">Upload metabolite concentration data from Metabolomics Workbench</span>
+          <input
+            type="file"
+            class="form-control"
+            (change)="uploadService.readText($event)"
+            accept=".txt"
+          />
+          <span class="file-info"
+            >Upload metabolite concentration data from Metabolomics
+            Workbench</span
+          >
         </div>
       </div>
     </div>
@@ -47,7 +84,11 @@
   </div>
 
   <div class="actions">
-    <button class="btn btn-primary" (click)="uploadService.proceed('Metabolomics')" [disabled]="!uploadService.canProceed('Metabolomics')">
+    <button
+      class="btn btn-primary"
+      (click)="uploadService.proceed('Metabolomics')"
+      [disabled]="!uploadService.canProceed('Metabolomics')"
+    >
       {{ uploadService.getContinueButton() }}
     </button>
   </div>
