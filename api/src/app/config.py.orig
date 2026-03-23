@@ -22,14 +22,13 @@ class BaseConfig:
     # Comment below line for local development on Docker
     # SQLALCHEMY_DATABASE_URI = 'postgresql://biodlab:biodb+6859@localhost/appdb'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(days=25)
-    JWT_HEADER_TYPE = "JWT"
+    JWT_EXPIRATION_DELTA = datetime.timedelta(days=25)
 
-    CELERY_broker_url = os.getenv('CELERY_broker_url',
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL',
                                   'redis://localhost:6379')  # Use 'redis://redis:6379' inside Docker
-    result_backend = os.getenv('result_backend',
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND',
                                       'redis://localhost:6379')  # Use 'redis://redis:6379' inside Docker
-    beat_schedule = {
+    CELERYBEAT_SCHEDULE = {
         'train_save_model': {
             'task': 'train_save_model',
             'schedule': crontab(minute=0, hour=21, day_of_week=2)

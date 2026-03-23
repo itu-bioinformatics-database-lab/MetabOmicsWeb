@@ -6,8 +6,9 @@ from sqlalchemy import and_, or_
 from sqlalchemy.types import Float
 from sqlalchemy.dialects.postgresql import JSON, ARRAY
 from sqlalchemy.ext.mutable import MutableList
-from flask_sqlalchemy import SQLAlchemy, BaseQuery
-from flask_jwt import jwt_required, current_identity, _jwt_required
+from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy.query import Query as BaseQuery
+from flask_jwt_extended import jwt_required, current_user as current_identity
 
 from .app import app
 
