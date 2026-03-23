@@ -2,39 +2,52 @@
   <div class="welcome-content">
     <h1>Welcome to Multiomics Analysis Tool!</h1>
     <p class="subtitle">Please choose omics types that you want to include.</p>
-    
+
     <div class="omics-options">
-      <div class="omics-option" 
-           [class.selected]="selectedOmics.includes('Metabolomics')"
-           (click)="toggleOmics('Metabolomics')">
+      <div
+        class="omics-option"
+        [class.selected]="selectedOmics.includes('Metabolomics')"
+        (click)="toggleOmics('Metabolomics')"
+      >
         Metabolomics
       </div>
-      <div class="omics-option" 
-           [class.selected]="selectedOmics.includes('Transcriptomics')"
-           (click)="toggleOmics('Transcriptomics')">
+      <div
+        class="omics-option"
+        [class.selected]="selectedOmics.includes('Transcriptomics')"
+        (click)="toggleOmics('Transcriptomics')"
+      >
         Transcriptomics
       </div>
-      <div class="omics-option" 
-           [class.selected]="selectedOmics.includes('Proteomics')"
-           (click)="toggleOmics('Proteomics')">
+      <div
+        class="omics-option"
+        [class.selected]="selectedOmics.includes('Proteomics')"
+        (click)="toggleOmics('Proteomics')"
+      >
         Proteomics
       </div>
-      <div class="omics-option disabled">
+      <div
+        class="omics-option"
+        [class.selected]="selectedOmics.includes('Genomic Variants')"
+        (click)="toggleOmics('Genomic Variants')"
+      >
         Genomic Variants
       </div>
-      <div class="omics-option disabled">
+      <div
+        class="omics-option"
+        [class.selected]="selectedOmics.includes('Epigenomics')"
+        (click)="toggleOmics('Epigenomics')"
+      >
         Epigenomics
       </div>
-      <div class="omics-option" 
-           [class.selected]="selectedOmics.includes('miRNAs')"
-           (click)="toggleOmics('miRNAs')">
+      <div
+        class="omics-option"
+        [class.selected]="selectedOmics.includes('miRNAs')"
+        (click)="toggleOmics('miRNAs')"
+      >
         miRNAs
       </div>
     </div>
 
-    <button class="continue-button" 
-            (click)="continue()">
-      Continue
-    </button>
+    <button class="continue-button" (click)="continue()">Continue</button>
   </div>
-</div> 
+</div>

@@ -127,29 +127,31 @@ export class UploadService implements OnDestroy {
     this.currentOmicsIndex = 0;
   }
 
-  // Navigate to specific omics type
+  // Navigate to the measurement (input method selection) page for a given omics type.
+  // Each measurement page offers Upload / Manual / Sample options, matching the
+  // first-omics experience that starts from the Welcome page.
   navigateToOmicsType(omicsType: string) {
     switch (omicsType) {
-      case "Metabolomics":
-        this.router.navigate(["/analyze/metabolomics-measurement"]);
+      case 'Metabolomics':
+        this.router.navigate(['/analyze/metabolomics-measurement']);
         break;
-      case "Transcriptomics":
-        this.router.navigate(["/analyze/transcriptomics"]);
+      case 'Transcriptomics':
+        this.router.navigate(['/analyze/transcriptomics-measurement']);
         break;
-      case "Proteomics":
-        this.router.navigate(["/analyze/proteomics"]);
+      case 'Proteomics':
+        this.router.navigate(['/analyze/proteomics-measurement']);
         break;
-      case "miRNAs":
-        this.router.navigate(["/analyze/mirnas"]);
+      case 'miRNAs':
+        this.router.navigate(['/analyze/mirnas-measurement']);
         break;
-      case "Genomic Variants":
-        this.router.navigate(["/analyze/genomic-variants"]);
+      case 'Genomic Variants':
+        this.router.navigate(['/analyze/genomic-variants-measurement']);
         break;
-      case "Epigenomics":
-        this.router.navigate(["/analyze/epigenomics"]);
+      case 'Epigenomics':
+        this.router.navigate(['/analyze/epigenomics-measurement']);
         break;
       default:
-        console.warn("Unknown omics type:", omicsType);
+        console.warn('Unknown omics type:', omicsType);
         break;
     }
   }
@@ -349,7 +351,13 @@ export class UploadService implements OnDestroy {
 
         for (let variant in this.temp) {
           const item = this.temp[variant];
-          const targetGene = item.gene_symbol;
+          const targetGene = item.gene_symbol || item.gene || "";
+          if (!targetGene) {
+            // No gene to map to — still record as unmapped
+            this.gvConTable.push([variant, 0, "-", "-", false,
+              { clinical_sig: "Unknown", consequence: "n/a", location: "unknown" }]);
+            continue;
+          }
           const impact_score =
             item.impact_score !== undefined ? Number(item.impact_score) : 0;
 
@@ -365,12 +373,12 @@ export class UploadService implements OnDestroy {
           if (graph.vertices[targetGene]) {
             const vertex = graph.vertices[targetGene];
             this.gvConTable.push([
-              variant, // 0: string
-              impact_score, // 1: number
-              vertex.label || targetGene, // 2: string
-              targetGene, // 3: string
-              true, // 4: boolean
-              metadata, // 5: object (The "alias" container)
+              variant,
+              impact_score,
+              vertex.label || targetGene,
+              targetGene,
+              true,
+              metadata,
             ]);
           } else {
             this.gvConTable.push([
@@ -381,6 +389,51 @@ export class UploadService implements OnDestroy {
               false,
               metadata,
             ]);
+          }
+        }
+      } else if (omicsType == "Epigenomics") {
+        localStorage.removeItem("metabolitics-data-Epigenomics");
+
+        for (let feature in this.temp) {
+          const item = this.temp[feature];
+          const targetGene = item.gene_symbol || item.gene || item.target_gene || "";
+          if (!targetGene) {
+            // No gene to map to
+            this.epConTable.push([feature, 0, "-", "-", false]);
+            continue;
+          }
+
+          // Get the score/value - try multiple common field names
+          const score =
+            item.beta_value !== undefined
+              ? Number(item.beta_value)
+              : item.delta_beta !== undefined
+              ? Number(item.delta_beta)
+              : item.m_value !== undefined
+              ? Number(item.m_value)
+              : item.fold_change !== undefined
+              ? Number(item.fold_change)
+              : item.enrichment_score !== undefined
+              ? Number(item.enrichment_score)
+              : item.accessibility_score !== undefined
+              ? Number(item.accessibility_score)
+              : item.signal_value !== undefined
+              ? Number(item.signal_value)
+              : item.score !== undefined
+              ? Number(item.score)
+              : 0;
+
+          if (graph.vertices[targetGene]) {
+            const vertex = graph.vertices[targetGene];
+            this.epConTable.push([
+              feature,
+              score,
+              vertex.label || targetGene,
+              targetGene,
+              true,
+            ]);
+          } else {
+            this.epConTable.push([feature, score, "-", "-", false]);
           }
         }
       }
@@ -606,7 +659,94 @@ export class UploadService implements OnDestroy {
           }
         }
       } else if (omicsType == "Genomic Variants") {
+        localStorage.removeItem("metabolitics-data-GenomicVariants");
+        for (let line of lines) {
+          const splitted = line.split(",");
+          const variant = splitted[0].replace(/"/g, "").trim();
+
+          if (variant !== "" && variant !== null) {
+            // Expected CSV format: variant_id, gene_symbol, impact_score, clinical_significance, consequence, chromosome, position
+            const targetGene = splitted[1]
+              ? splitted[1].replace(/"/g, "").trim()
+              : "";
+            // Skip header row or rows with no gene symbol
+            if (!targetGene || targetGene === "gene_symbol") continue;
+
+            const impact_score = splitted[2] ? Number(splitted[2].trim()) : 0;
+            const clinical_sig = splitted[3]
+              ? splitted[3].replace(/"/g, "").trim()
+              : "Unknown";
+            const consequence = splitted[4]
+              ? splitted[4].replace(/"/g, "").trim()
+              : "n/a";
+            const chromosome = splitted[5]
+              ? splitted[5].replace(/"/g, "").trim()
+              : "";
+            const position = splitted[6]
+              ? splitted[6].replace(/"/g, "").trim()
+              : "";
+
+            const metadata = {
+              clinical_sig: clinical_sig,
+              consequence: consequence,
+              location:
+                chromosome && position
+                  ? `${chromosome}:${position}`
+                  : "unknown",
+            };
+
+            if (graph.vertices[targetGene]) {
+              const vertex = graph.vertices[targetGene];
+              this.gvConTable.push([
+                variant,
+                impact_score,
+                vertex.label || targetGene,
+                targetGene,
+                true,
+                metadata,
+              ]);
+            } else {
+              this.gvConTable.push([
+                variant,
+                impact_score,
+                "-",
+                "-",
+                false,
+                metadata,
+              ]);
+            }
+          }
+        }
       } else if (omicsType == "Epigenomics") {
+        localStorage.removeItem("metabolitics-data-Epigenomics");
+        for (let line of lines) {
+          const splitted = line.split(",");
+          const feature = splitted[0].replace(/"/g, "").trim();
+
+          if (feature !== "" && feature !== null) {
+            // Expected CSV format: feature_id, gene_symbol, score/value
+            const targetGene = splitted[1]
+              ? splitted[1].replace(/"/g, "").trim()
+              : "";
+            // Skip header row or rows with no gene symbol
+            if (!targetGene || targetGene === "gene_symbol") continue;
+
+            const score = splitted[2] ? Number(splitted[2].trim()) : 0;
+
+            if (graph.vertices[targetGene]) {
+              const vertex = graph.vertices[targetGene];
+              this.epConTable.push([
+                feature,
+                score,
+                vertex.label || targetGene,
+                targetGene,
+                true,
+              ]);
+            } else {
+              this.epConTable.push([feature, score, "-", "-", false]);
+            }
+          }
+        }
       }
       switch (omicsType) {
         case "Metabolomics":
