@@ -1,0 +1,89 @@
+.upload-page {
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header h2 {
+    color: #2c3e50;
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+/* ── No-sample notice ──────────────────────────────────────────── */
+.no-sample-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: white;
+    border: 1px solid #dce1e7;
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.06);
+}
+
+.notice-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #3498db;
+}
+
+.notice-body h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.notice-body p {
+    margin: 0;
+    color: #7f8c8d;
+    font-size: 0.97em;
+    line-height: 1.6;
+}
+
+.notice-body p strong {
+    color: #2c3e50;
+}
+
+.options-hint {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.hint-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.hint-chip:hover {
+    background-color: #2980b9;
+    color: white;
+    text-decoration: none;
+}
+
+/* ── Actions row ───────────────────────────────────────────────── */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+}
