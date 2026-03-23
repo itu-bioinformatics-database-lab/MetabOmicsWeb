@@ -1,16 +1,13 @@
 from marshmallow import Schema, fields
 from flask_marshmallow import Marshmallow
-
 from .app import app
-from .models import User, Analyses
+from .models import User, Analyses, db
 
 ma = Marshmallow(app)
 
-#
 class AnalysisInputSchema(Schema):
     study_name = fields.String(required=True)
     public = fields.Boolean(required=True)
-    # concentration_changes = fields.Dict(required=True)
     analysis = fields.Dict(required=True)
     group = fields.String(required=True)
     isMapped = fields.Dict(required=False)
@@ -24,19 +21,16 @@ class AnalysisInputSchema(Schema):
 class AnalysisInputSchema2(Schema):
     study_name = fields.String(required=True)
     public = fields.Boolean(required=True)
-    # concentration_changes = fields.Dict(required=True)
     analysis = fields.Dict(required=True)
     group = fields.String(required=True)
     disease = fields.Integer(required=True)
     isMapped = fields.Dict(required=False)
     email = fields.String(required=True)
 
-
 class PasswordChangeSchema(Schema):
     old_password = fields.String(required=True)
     new_password = fields.String(required=True)
 
-#
 class UserSchema(ma.SQLAlchemyAutoSchema):
     name = fields.String(required=True)
     surname = fields.String(required=True)
@@ -44,26 +38,20 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     affiliation = fields.String(required=True)
     password = fields.String(required=True, load_only=True)
     confirmPassword = fields.String(required=True, load_only=True)
-
     class Meta:
         model = User
         load_instance = True
         include_fk = True
         exclude = ('analysis', )
 
-
 class AnalysisSchema(ma.SQLAlchemyAutoSchema):
     results = fields.Dict()
     visualization = fields.Dict()
-
-    # type = fields.String(required=False)
-
     class Meta:
         model = Analyses
         load_instance = True
         include_fk = True
         exclude = ('user', )
-
 
 class PathwayChangesScheme(Schema):
     pathway = fields.String(required=True)

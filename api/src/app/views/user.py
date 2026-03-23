@@ -1,12 +1,24 @@
 from flask import jsonify, request
 from flask_swagger import swagger
-from flask_jwt import jwt_required, current_identity
+from flask_jwt_extended import jwt_required, current_user as current_identity
 
 from ..app import app
 from ..schemas import *
 from ..models import db, User, Analyses
 from json import dump,dumps
 from marshmallow import ValidationError
+
+from flask_jwt_extended import create_access_token
+from ..auth import authenticate
+
+@app.route("/auth", methods=["POST"])
+def login():
+    data = request.get_json()
+    user = authenticate(data.get("username"), data.get("password"))
+    if not user:
+        return jsonify({"error": "Invalid credentials"}), 401
+    token = create_access_token(identity=user)
+    return jsonify({"access_token": token})
 
 @app.route("/spec")
 def spec():

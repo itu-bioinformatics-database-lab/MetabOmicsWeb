@@ -1,6 +1,6 @@
 from functools import reduce
 from flask import jsonify, request
-from flask_jwt import jwt_required, current_identity
+from flask_jwt_extended import jwt_required, current_user as current_identity
 from sqlalchemy import and_, or_
 from sqlalchemy.types import Float
 from ..utils import similarty_dict
