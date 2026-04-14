@@ -20,6 +20,9 @@ from ..pe import *
 from metabomics.preprocessing import MetaboliticsPipeline
 import sys
 from marshmallow import ValidationError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -68,18 +71,65 @@ def fva_analysis():
     if not request.json:
         return "", 404
 
+    logger.warning(
+        "[FVA] Request received user=%s study=%s analysis_cases=%s keys=%s",
+        str(current_identity),
+        request.json.get("study_name"),
+        len(request.json.get("analysis", {})),
+        list(request.json.keys()),
+    )
+
     # if 'metabolites' in data:
     #     enhance_synonyms.delay(data['metabolites'])
 
-    print("[API DEBUG] /analysis/fva received. Keys in analysis:", list(data.get('analysis', {}).keys()))
+    sample_count = len(data.get('analysis', {}))
+    logger.warning("[FVA] Pre-checkMapped sample_count=%s case_names=%s", sample_count, list(data.get('analysis', {}).keys()))
     data = checkMapped(data)
-    print("[API DEBUG] After checkMapped, analysis keys:", list(data.get('analysis', {}).keys()))
+
+    # Fail-safe: if checkMapped strips cases unexpectedly (often due mixed-omics
+    # isMapped merge/key mismatches), restore original metabolite-containing cases
+    # from request payload so Celery dispatch is not skipped.
+    raw_analysis = request.json.get('analysis', {}) if request.json else {}
+    for case_name, raw_case in raw_analysis.items():
+        raw_metabs = raw_case.get('metabolites', {}) or {}
+        if len(raw_metabs) == 0:
+            continue
+        if case_name not in data['analysis']:
+            data['analysis'][case_name] = {
+                'Label': raw_case.get('Label', 'not_provided'),
+                'metabolites': raw_metabs,
+                'transcriptomes': raw_case.get('transcriptomes', {}) or {},
+                'miRNAs': raw_case.get('miRNAs', {}) or {},
+                'proteins': raw_case.get('proteins', {}) or {}
+            }
+        elif len(data['analysis'][case_name].get('metabolites', {})) == 0:
+            data['analysis'][case_name]['metabolites'] = raw_metabs
+    logger.warning("[FVA] Post-checkMapped case_count=%s case_names=%s", len(data.get('analysis', {})), list(data.get('analysis', {}).keys()))
 
     user = User.query.filter_by(email=str(current_identity)).first()
-    print("[API DEBUG] user:", user)
+
+    def _sanitize_numeric_dict(d):
+        """
+        Normalize omics payload values to plain finite Python floats.
+        This prevents DB JSON serialization/runtime issues that can block
+        Celery dispatch when supplemental omics (especially proteomics) are present.
+        """
+        if not isinstance(d, dict):
+            return {}
+        out = {}
+        for k, v in d.items():
+            try:
+                fv = float(v)
+                if fv != fv or fv in (float('inf'), float('-inf')):  # NaN/Inf guard
+                    continue
+                out[k] = fv
+            except Exception:
+                continue
+        return out
+    logger.warning("[FVA] user_resolved=%s", str(user.email) if user else "None")
 
     if len(data['analysis']) == 0:
-        print("[API DEBUG] mapping_error — no samples passed checkMapped!")
+        logger.warning("[FVA] mapping_error: no samples passed checkMapped/failsafe")
         return jsonify({'id': 'mapping_error'})
 
     else:
@@ -108,23 +158,95 @@ def fva_analysis():
         X_protein_scaled = None
         y = None
 
-        for key,value in data['analysis'].items():
-            if len(value['metabolites']) > 0:
-                if value['Label'] == data['group'].lower() + ' label avg':
+        # COMMENT OUT THIS:
+        # for key,value in data['analysis'].items():
+        #     if len(value['metabolites']) > 0:
+        #         if value['Label'] == data['group'].lower() + ' label avg':
+        # 
+        #             healthy_metab_data = {k: (v if v != 0 else sys.float_info.min) for k, v in value['metabolites'].items()}
+        # 
+        #             raw_genes = value.get('transcriptomes', {})
+        #             healthy_gene_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_genes.items()} if raw_genes else None
+        # 
+        #             raw_mirna = value.get('mirnas', {})
+        #             healthy_mirna_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_mirna.items()} if raw_mirna else None
+        # 
+        #             raw_proteins = value.get('proteins', {})
+        #             healthy_protein_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_proteins.items()} if raw_proteins else None
 
-                    healthy_metab_data = {k: (v if v != 0 else sys.float_info.min) for k, v in value['metabolites'].items()}
+        # Compute healthy average from samples labeled 'healthy'
+        healthy_samples = [
+            v for v in data['analysis'].values()
+            if v['Label'] == 'healthy'
+        ]
+        
+        if healthy_samples:
+            hm_samples = [s['metabolites'] for s in healthy_samples if s.get('metabolites')]
+            if hm_samples:
+                all_keys = set(k for s in hm_samples for k in s)
+                healthy_metab_data = {
+                    k: (sum(s.get(k, 0) for s in hm_samples) / len(hm_samples))
+                    for k in all_keys
+                }
+                healthy_metab_data = {
+                    k: (v if v != 0 else sys.float_info.min)
+                    for k, v in healthy_metab_data.items()
+                }
 
-                    raw_genes = value.get('transcriptomes', {})
-                    healthy_gene_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_genes.items()} if raw_genes else None
+            hg_samples = [s['transcriptomes'] for s in healthy_samples if s.get('transcriptomes')]
+            if hg_samples:
+                all_keys = set(k for s in hg_samples for k in s)
+                healthy_gene_data = {
+                    k: (sum(s.get(k, 0) for s in hg_samples) / len(hg_samples))
+                    for k in all_keys
+                }
+                healthy_gene_data = {
+                    k: (v if v != 0 else sys.float_info.min)
+                    for k, v in healthy_gene_data.items()
+                }
 
-                    raw_mirna = value.get('mirnas', {})
-                    healthy_mirna_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_mirna.items()} if raw_mirna else None
+            hmir_samples = [s['miRNAs'] for s in healthy_samples if s.get('miRNAs')]
+            if hmir_samples:
+                all_keys = set(k for s in hmir_samples for k in s)
+                healthy_mirna_data = {
+                    k: (sum(s.get(k, 0) for s in hmir_samples) / len(hmir_samples))
+                    for k in all_keys
+                }
+                healthy_mirna_data = {
+                    k: (v if v != 0 else sys.float_info.min)
+                    for k, v in healthy_mirna_data.items()
+                }
 
-                    raw_proteins = value.get('proteins', {})
-                    healthy_protein_data = {k: (v if v != 0 else sys.float_info.min) for k, v in raw_proteins.items()} if raw_proteins else None
+            hp_samples = [s['proteins'] for s in healthy_samples if s.get('proteins')]
+            if hp_samples:
+                all_keys = set(k for s in hp_samples for k in s)
+                healthy_protein_data = {
+                    k: (sum(s.get(k, 0) for s in hp_samples) / len(hp_samples))
+                    for k in all_keys
+                }
+                healthy_protein_data = {
+                    k: (v if v != 0 else sys.float_info.min)
+                    for k, v in healthy_protein_data.items()
+                }
 
+        logger.warning(
+            "[FVA] group=%s labels=%s healthy_samples=%s healthy_baseline_exists=%s",
+            data["group"],
+            [v["Label"] for v in data["analysis"].values()],
+            len(healthy_samples),
+            healthy_metab_data is not None,
+        )
         for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
             if len(value['metabolites']) > 0:
+                logger.warning(
+                    "[FVA] case=%s label=%s counts before scale: metab=%s gene=%s mirna=%s prot=%s",
+                    key,
+                    value.get('Label'),
+                    len(value.get('metabolites', {})),
+                    len(value.get('transcriptomes', {})),
+                    len(value.get('miRNAs', {})),
+                    len(value.get('proteins', {})),
+                )
                 for k, v in value['metabolites'].items():
                     if v == 0: value['metabolites'][k] = sys.float_info.min
                 if healthy_metab_data != None:
@@ -159,9 +281,14 @@ def fva_analysis():
                 )
                 db.session.add(metabolite_data)
 
-                transcriptome_obj = create_omics_entry(X_gene_scaled, "transcriptome", user, disease, bool(request.json.get('public')))
-                mirna_obj = create_omics_entry(X_mirna_scaled, "miRNA", user, disease, bool(request.json.get('public')))
-                protein_obj = create_omics_entry(X_protein_scaled, "protein", user, disease, bool(request.json.get('public')))
+                final_metab = _sanitize_numeric_dict(X_t if healthy_metab_data != None else value["metabolites"])
+                final_gene = _sanitize_numeric_dict(X_gene_scaled if healthy_metab_data != None else value.get('transcriptomes', {}))
+                final_mirna = _sanitize_numeric_dict(X_mirna_scaled if healthy_metab_data != None else value.get('miRNAs', {}))
+                final_protein = _sanitize_numeric_dict(X_protein_scaled if healthy_metab_data != None else value.get('proteins', {}))
+
+                transcriptome_obj = create_omics_entry(final_gene, "transcriptome", user, disease, bool(request.json.get('public')))
+                mirna_obj = create_omics_entry(final_mirna, "miRNA", user, disease, bool(request.json.get('public')))
+                protein_obj = create_omics_entry(final_protein, "protein", user, disease, bool(request.json.get('public')))
                 db.session.commit()
                 
                 analysis = Analyses(name=key, user=user)
@@ -182,19 +309,33 @@ def fva_analysis():
                 db.session.add(analysis)
                 db.session.commit()
 
-                print("[API DEBUG] Dispatching save_analysis.delay for analysis.id:", analysis.id, "metabolites count:", len(value['metabolites']))
-                save_analysis.delay(
-                    analysis.id, 
-                    X_t if healthy_metab_data != None else value["metabolites"], 
-                    gene_changes=X_gene_scaled, 
-                    miRNAs=X_mirna_scaled, 
-                    proteins=X_protein_scaled, 
-                    y=value['Label']
+                logger.warning(
+                    "[FVA] queueing analysis_id=%s case=%s payload_counts: metab=%s gene=%s mirna=%s prot=%s",
+                    analysis.id,
+                    key,
+                    len(final_metab),
+                    len(final_gene),
+                    len(final_mirna),
+                    len(final_protein),
+                )
+                try:
+                    save_analysis.delay(
+                        analysis.id,
+                        final_metab,
+                        gene_changes=final_gene if final_gene else None,
+                        miRNAs=final_mirna if final_mirna else None,
+                        proteins=final_protein if final_protein else None,
+                        y=value['Label'],
+                        healthy_concentration=healthy_metab_data
                     )
-                print("[API DEBUG] save_analysis.delay dispatched successfully!")
+                    logger.warning("[FVA] celery_dispatch_ok analysis_id=%s case=%s", analysis.id, key)
+                except Exception as celery_err:
+                    logger.exception("[FVA] celery_dispatch_failed analysis_id=%s case=%s err=%s", analysis.id, key, celery_err)
+                    raise
 
                 analysis_id = analysis.id
 
+        logger.warning("[FVA] completed study=%s last_analysis_id=%s", request.json.get("study_name"), analysis_id)
         return jsonify({'id': analysis_id})
 
 ###############
@@ -220,6 +361,31 @@ def fva_analysis_public():
     #     enhance_synonyms.delay(data['metabolites'])
 
     data = checkMapped(data)
+
+    # Same fail-safe for public endpoint: preserve original metabolite-containing
+    # cases if checkMapped filtered them out.
+    raw_analysis = request.json.get('analysis', {}) if request.json else {}
+    for case_name, raw_case in raw_analysis.items():
+        raw_metabs = raw_case.get('metabolites', {}) or {}
+        if len(raw_metabs) == 0:
+            continue
+        if case_name not in data['analysis']:
+            data['analysis'][case_name] = {
+                'Label': raw_case.get('Label', 'not_provided'),
+                'metabolites': raw_metabs,
+                'transcriptomes': raw_case.get('transcriptomes', {}) or {},
+                'miRNAs': raw_case.get('miRNAs', {}) or {},
+                'proteins': raw_case.get('proteins', {}) or {}
+            }
+        elif len(data['analysis'][case_name].get('metabolites', {})) == 0:
+            data['analysis'][case_name]['metabolites'] = raw_metabs
+    
+    logger.warning(
+        "[FVA_PUBLIC] Post-checkMapped group=%s labels=%s case_count=%s",
+        data.get('group'),
+        [v['Label'] for v in data.get('analysis', {}).values()],
+        len(data.get('analysis', {})),
+    )
 
     user = User.query.filter_by(email='tajothman@std.sehir.edu.tr').first()
     if len(data['analysis']) == 0:
@@ -340,7 +506,6 @@ def direct_pathway_mapping():
                 if value['Label'] == data['group'].lower() + ' label avg':
                     healthy_metab_data = value['metabolites']
                     # healthy_gene_data = value['transcriptomes']
-        for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
             current_metabolites = value["metabolites"]
           # current_genes = value["transcriptomes"]
             if len(current_metabolites) > 0:
@@ -452,8 +617,8 @@ def direct_pathway_mapping2():
         db.session.add(study)
         db.session.commit()
 
-        analysis_id = 0
-        for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
+        for key,value in data["analysis"].items():
+
 
             if len(value['metabolites']) > 0:
                 metabolite_data = OmicsDatasets(
@@ -558,7 +723,6 @@ def pathway_enrichment():
                     healthy_metab_data = value['metabolites']
                   # healthy_gene_data = value['transcriptomes']
 
-        for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
             current_metabolites = value["metabolites"]
             # current_genes = value["transcriptomes"]
             if len(current_metabolites) > 0:
@@ -671,8 +835,7 @@ def pathway_enrichment2():
         db.session.commit()
 
         analysis_id = 0
-        for key,value in data["analysis"].items():  # user as key, value {metaboldata , label}
-
+        for key, value in data["analysis"].items():
             if len(value['metabolites']) > 0:
                 metabolite_data = OmicsDatasets(
                     omics_type = "metabolite",
@@ -950,7 +1113,7 @@ def user_analysis():
 
     if 'Authorization Required' not in str(current_identity.id):
         for item in data:
-            analyses = Analyses.query.filter_by(owner_user_id=current_identity.id, type='private', dataset_id=item.id).with_entities(
+            analyses = Analyses.query.filter_by(owner_user_id=current_identity.id, dataset_id=item.id).with_entities(
             Analyses.id, Analyses.name, Analyses.dataset_id, Analyses.start_time, Analyses.end_time)
             analysisMethod = AnalysisMethod.query.get(item.analysis_method_id)
             diffusionMethod = DiffusionMethod.query.get(item.diffusion_id) if item.diffusion_id else None
@@ -1166,10 +1329,23 @@ def checkMapped(data):
 
     if 'isMapped' in data.keys():
 
+        def _mapped_true(mapped_entry):
+            """Accept legacy/new isMapped entry shapes safely."""
+            if isinstance(mapped_entry, dict):
+                val = mapped_entry.get('isMapped', False)
+                if isinstance(val, str):
+                    return val.lower() == 'true'
+                return bool(val)
+            if isinstance(mapped_entry, str):
+                return mapped_entry.lower() == 'true'
+            return bool(mapped_entry)
+
         isMapped = data['isMapped']
+        print(f"[checkMapped] isMapped branch taken. isMapped keys count: {len(isMapped)}")
         for case in data['analysis'].keys():
             temp = {}
             metabolites = data['analysis'][case]['metabolites']
+            print(f"[checkMapped] Case '{case}' has {len(metabolites)} metabolites. Keys sample: {list(metabolites.keys())[:5]}")
             transcriptomes = data['analysis'][case].get('transcriptomes', {})
             miRNAs = data['analysis'][case].get('miRNAs', {})
             proteins = data['analysis'][case].get('proteins', {})
@@ -1181,17 +1357,25 @@ def checkMapped(data):
             temp.setdefault('proteins', {})
 
             for i in transcriptomes.keys():
-                if i in isMapped and isMapped[i]['isMapped'] is True:
+                if i in isMapped and _mapped_true(isMapped[i]):
                     temp['transcriptomes'][i] = transcriptomes[i]
             for i in miRNAs.keys():
-                if i in isMapped and isMapped[i]['isMapped'] is True:
+                if i in isMapped and _mapped_true(isMapped[i]):
                     temp['miRNAs'][i] = miRNAs[i]
             for i in proteins.keys():
-                if i in isMapped and isMapped[i]['isMapped'] is True:
+                if i in isMapped and _mapped_true(isMapped[i]):
                     temp['proteins'][i] = proteins[i]
             for i in metabolites.keys():
-                if i in isMapped and isMapped[i]['isMapped'] is True:
+                if i in isMapped and _mapped_true(isMapped[i]):
                     temp['metabolites'][i] = metabolites[i]
+
+            # Fail-safe: if filtering removed all metabolites while the original case
+            # had metabolite values, keep originals so analysis is not dropped before
+            # Celery dispatch. This avoids silent queue-skips due to isMapped shape
+            # mismatches/merge issues across omics payloads.
+            if len(temp['metabolites']) == 0 and len(metabolites) > 0:
+                print(f"[checkMapped] WARNING: metabolites filtered to zero for case '{case}'. Falling back to original metabolites.")
+                temp['metabolites'] = metabolites.copy()
             
             # print(len(temp['metabolites']))
             if len(temp['metabolites']) > 0:
@@ -1297,6 +1481,8 @@ def delete_analysis():
 
 def create_omics_entry(data, o_type, user, disease, is_public):
     if data is not None:
+        if isinstance(data, dict) and len(data) == 0:
+            return None
         entry = OmicsDatasets(
             omics_type=o_type,
             omics_data=data,
@@ -1308,3 +1494,9 @@ def create_omics_entry(data, o_type, user, disease, is_public):
         db.session.add(entry)
         return entry
     return None
+    logger.warning(
+        "[FVA_PUBLIC] Request received study=%s analysis_cases=%s keys=%s",
+        request.json.get("study_name"),
+        len(request.json.get("analysis", {})) if request.json else 0,
+        list(request.json.keys()) if request.json else [],
+    )

@@ -42,7 +42,8 @@ def save_analysis(
     y='healthy',
     registered=True,
     mail='none',
-    study2='none'
+    study2='none',
+    healthy_concentration=None,
 ):
     logger.warning('[TASK] save_analysis started for analysis_id=%s', analysis_id)
 
@@ -64,9 +65,17 @@ def save_analysis(
         X_prot = [proteins] if proteins else [{} for _ in X]
         X_methy = [{} for _ in X]
 
+        # Merge all supplementary omics into X_tr since the transformer only takes X and X_tr
+        combined_omics = [{} for _ in X]
+        for i in range(len(X)):
+            combined_omics[i].update(X_tr[i])
+            combined_omics[i].update(X_miRNA[i])
+            combined_omics[i].update(X_prot[i])
+            combined_omics[i].update(X_methy[i])
+
         X_train_transformed = metabolitics_transformer.transform(
             X=X,
-            X_tr=X_tr,
+            X_tr=combined_omics,
             y=None
         )
 
@@ -97,46 +106,31 @@ def save_analysis(
 
         logger.warning('[DEBUG] normalized y_list: %s', y_list)
 
-        # Single-sample path: reaction-diff requires a valid reference label
-        # If label is missing / not_provided, skip it and pass through raw transformed reactions.
-        skip_reaction_diff = (
-            y_list is None or
-            len(y_list) == 0 or
-            y_list[0] in (None, '', 'not_provided')
-        )
-
-        if skip_reaction_diff:
-            logger.warning(
-                '[DEBUG] Skipping reaction-diff because no valid label was provided. '
-                'Using X_train_transformed directly as reaction results.'
-            )
-            results_diff_score = X_train_transformed
-        else:
-            model = MetaboliticsPipeline([
-                'reaction-diff'
-            ])
-
-            results_diff_score = model.fit_transform(X_train_transformed, y=y_list)
-
-            reaction_diff_step = model.named_steps.get('reaction-diff')
-            if reaction_diff_step is not None:
-                healthy_flux = getattr(reaction_diff_step, 'healthy_flux', None)
-                logger.warning('[DEBUG] healthy_flux is None? %s', healthy_flux is None)
-
-                if healthy_flux is not None:
-                    logger.warning('[DEBUG] healthy_flux key count: %s', len(healthy_flux))
-                    nonzero = {k: v for k, v in healthy_flux.items() if v != 0.0}
-                    logger.warning('[DEBUG] healthy_flux non-zero entry count: %s', len(nonzero))
-
-                    if len(nonzero) == 0:
-                        logger.warning('[DEBUG] WARNING: healthy_flux is all zeros → diff may be all zeros!')
-                    else:
-                        logger.warning(
-                            '[DEBUG] healthy_flux first 5 non-zero: %s',
-                            dict(list(nonzero.items())[:5])
-                        )
+        # Rather than completely skipping ReactionDiff when labels are missing, 
+        # or crashing due to ValueError, we manually instantiate ReactionDiffTransformer
+        # and give it an empty healthy_flux (i.e. all zeros) so it correctly aggregates min/max bounds.
+        from metabomics.preprocessing.reaction_diff_transformer import ReactionDiffTransformer
+        from collections import defaultdict
+        
+        rd_model = ReactionDiffTransformer()
+        
+        # If the sample is explicitly labeled "healthy", trying to use ReactionDiff
+        # as originally designed would subtract the sample from itself, resulting in all zeroes.
+        # But for visualization purposes, the user wants the absolute flux bounds!
+        # So we force healthy_flux to 0 for single-sample celery runs.
+        # We explicitly inject ALL keys from the sample, because ReactionDiff internally
+        # checks if key 'in' healthy_flux before proceeding, otherwise it returns None!
+        if X_train_transformed and len(X_train_transformed) > 0:
+            if healthy_concentration is not None:
+                _ht = MetaboliticsTransformer()
+                _healthy_fva = _ht.transform(X=[healthy_concentration], X_tr=[{}])[0]
+                rd_model.healthy_flux = _healthy_fva
             else:
-                logger.warning('[DEBUG] WARNING: could not retrieve reaction-diff step from pipeline')
+                rd_model.healthy_flux = defaultdict(float, {k: 0.0 for k in X_train_transformed[0].keys()})
+        else:
+            rd_model.healthy_flux = defaultdict(float)
+        
+        results_diff_score = rd_model.transform(X_train_transformed)
 
         logger.warning(
             '[DEBUG] results_diff_score sample count: %s',
